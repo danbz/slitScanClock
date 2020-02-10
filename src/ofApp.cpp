@@ -22,8 +22,8 @@ void ofApp::setup(){
     sWidth = ofGetWidth();
     sHeight = ofGetHeight();
     seconds = minutes = hours = 0; // set start time
-    numOfSecs = 1; // debug to allow running everything faster
-    numOfMins = 24;
+    numOfSecs = 60; // debug to allow running everything faster
+    numOfMins = 60;
     numOfHours = 24;
     
     //**********************************************
@@ -32,7 +32,7 @@ void ofApp::setup(){
     // calculate size of hour and minute thumbnails
     thumbnailGutter = 2;
     thumbsMargin = 6;
-    hourThumbLineLength = 6;
+    hourThumbLineLength = 12;
     minuteThumbLineLength = 15;
     hourWidth = (sWidth - (hourThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /hourThumbLineLength;
     minuteWidth = (sWidth - (minuteThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /minuteThumbLineLength;
@@ -45,7 +45,7 @@ void ofApp::setup(){
     b_radial = b_drawDots = b_smooth = false;
     b_drawCam = false;
     
-    font.load("AkzidGroBol", 100);
+    font.load("AkzidGroBol.ttf", 100);
     // font.load("LiberationMono-Regular.ttf", 50);
     
     // ask the video grabber for a list of attached camera devices.
