@@ -1,16 +1,15 @@
 # SlitScan clock
 https://github.com/danbz
 
-Dan Buzzo, December 20200
+Dan Buzzo,  2020
 
 https://github.com/danbz
 
 https://buzzo.com
 
-#SlitscanClock
+# SlitscanClock
 
 code in C++ using openFrameworks.cc for timeLapse 24hr slitscan clock
-included is a compiled binary for OSX
 
 #Controls
 
@@ -24,4 +23,4 @@ included is a compiled binary for OSX
 * r: draw anystyle scan as radial
 * d: draw slitscan image as 3d dots z-ordered by lightness
 
- ![screenshot](screenshot-slitScanClock.jpg)
+ ![screenshot](screenshot-slitScanClock.png)
