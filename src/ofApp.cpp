@@ -14,33 +14,36 @@ void ofApp::setup(){
     //    camHeight = 480;
     camWidth =  1280;  // try to grab at this size from the camera.
     camHeight = 720;
-    
+    float aspectRatio = camHeight / camWidth;
     //**********************************************
     // TO DO - set up with correct system time on startup
     //**********************************************
     
+    sWidth = ofGetWidth();
+    sHeight = ofGetHeight();
     seconds = minutes = hours = 0; // set start time
-    numOfSecs = 10; // debug to allow running everything faster
+    numOfSecs = 1; // debug to allow running everything faster
     numOfMins = 24;
     numOfHours = 24;
-    
-    
     
     //**********************************************
     // TO DO - set up screen width & height and auto adjust the scan amount for HH, MM & SS
     //**********************************************
     // calculate size of hour and minute thumbnails
-    thumbnailGutter = 10;
-    minuteWidth = hourWidth = (ofGetWidth() - (13 * thumbnailGutter)) /12.0;
-    minuteHeight = hourHeight = hourWidth *0.75;
+    thumbnailGutter = 2;
+    thumbsMargin = 6;
+    hourThumbLineLength = 6;
+    minuteThumbLineLength = 15;
+    hourWidth = (sWidth - (hourThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /hourThumbLineLength;
+    minuteWidth = (sWidth - (minuteThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /minuteThumbLineLength;
+    hourHeight = hourWidth * aspectRatio;
+    minuteHeight = minuteWidth * aspectRatio;
     xSteps = ySteps = 0;
     speed = 1;
     scanStyle = 5; // start as clock style
     scanName = "horizontal";
     b_radial = b_drawDots = b_smooth = false;
     b_drawCam = false;
-    
-    
     
     font.load("AkzidGroBol", 100);
     // font.load("LiberationMono-Regular.ttf", 50);
@@ -137,13 +140,12 @@ void ofApp::update(){
             
         case 5: // slitscan clock
             if (ofGetSystemTimeMillis() > currTime + 1000){ // one second has elapsed
-                
+                currTime = ofGetSystemTimeMillis();
+                               seconds ++;
                 if (seconds >= numOfSecs){ // grab a minute chunk from the camera
                     // make a minute thumbnail and push into vector of minute thumbs
                     ofPixels newPixels;
-                   // newPixels = pixels;
                     newPixels = videoPixels; // load last minute's slitscan
-
                     newPixels.resize(minuteWidth, minuteHeight);
                     ofTexture newThumb;
                     newThumb.allocate(newPixels);
@@ -153,22 +155,16 @@ void ofApp::update(){
                     minutes ++;
                 }
                 
-                if (minutes >= numOfMins){ // grab a hour chunk from the camera
+                if (minutes >= numOfMins){ // grab an hour chunk from the camera
                     ofPixels newPixels;
-                    newPixels = pixels;
+                    newPixels = pixels; // grab a full frame from camera
+                    // alternatively blend all minute frames together to make hour composite.
                     newPixels.resize(hourWidth, hourHeight);
                     ofTexture newThumb;
                     newThumb.allocate(newPixels);
                     newThumb.loadData(newPixels);
                     hourThumbs.push_back(newThumb);
-                
-                    for (int i = 0; i <numOfMins * numOfSecs; i++){
-                        for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                            ofColor color = pixels.getColor( xSteps - i, y); // get the pixels on line ySteps
-                            videoPixels.setColor(xSteps - i, y, color);
-                        }
-                        // xSteps ++;
-                    }
+
                     seconds = 0;
                     minutes = 0 ;
                     hours ++;
@@ -176,24 +172,21 @@ void ofApp::update(){
                 }
                 
                 if (hours >= numOfHours){ // grab a day chunk from the camera
-                    //                    // pixels.drawSubsection(0, xSteps, xSteps + numOfSecs, videoTexture.getHeight(), xSteps, 0);
-                    //                    for (int i = 0; i <numOfMins * numOfSecs; i++){
-                    //                        for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                    //                            ofColor color = pixels.getColor( xSteps - i, y); // get the pixels on line ySteps
-                    //                            videoInverted.setColor(xSteps - i, y, color);
-                    //                        }
-                    //                        // xSteps ++;
-                    //                    }
                     hours = 0;
                     seconds = 0;
                     minutes = 0 ;
+                    hourThumbs.clear(); // empty the vector of hour thumbnails
                 }
-                
                 // count seconds
-                for (int j=0; j < ofGetWidth()/numOfSecs; j++){
+                for (int j=0; j < camWidth/numOfSecs; j++){
                     for (int y=0; y < camHeight; y++ ) { // loop through all the pixels on a line
-                        ofColor color = pixels.getColor( j + (ofGetWidth()/numOfSecs * seconds), y); // get the pixels on line ySteps
-                        videoPixels.setColor(j + (ofGetWidth()/numOfSecs * seconds), y, color);
+                        
+                        // *************************
+                        // FIX THIS to track with actual camWidth pixels rather than screenwidth!
+                        // *************************
+                        
+                        ofColor color = pixels.getColor( j + (camWidth/numOfSecs * seconds), y); // get the pixels on line ySteps
+                        videoPixels.setColor(j + (camWidth/numOfSecs * seconds), y, color);
                     }
                     xSteps ++; // step on to the next line. increase this number to make things faster
                 }
@@ -203,8 +196,7 @@ void ofApp::update(){
                 if ( xSteps >= camWidth ) {
                     xSteps = 0; // if we are on the end line of the image then start at the top again
                 }
-                currTime = ofGetSystemTimeMillis();
-                seconds ++;
+               
             }
             break;
             
@@ -217,8 +209,8 @@ void ofApp::update(){
 void ofApp::draw(){
     
     if (b_drawCam){
-        vidGrabber.draw(ofGetWidth()-camWidth/4 -10, ofGetHeight()-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
-        ofDrawBitmapString(" scanning " + scanName + " , press 1,2 or 3: for scantype, r: radial, c: camview, a: antialiased" , 10, ofGetHeight() -10);
+        vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
+        ofDrawBitmapString(" scanning " + scanName + " , press 1,2 or 3: for scantype, r: radial, c: camview, a: antialiased" , 10, sHeight -10);
     }
     
     if (scanStyle == 5){
@@ -242,13 +234,13 @@ void ofApp::draw(){
             clockSecs = ofToString(seconds);
         }
         time = clockHours + ":" + clockMins + ":" + clockSecs;
-        font.drawString( time  , ofGetWidth() -550, ofGetHeight() -90);
+        font.drawString( time  , sWidth -550, sHeight -90);
     }
     
     if (b_radial){ // radial ribbon
         for (int i =0; i<videoTexture.getWidth(); i+=speed){
             ofPushMatrix();
-            ofTranslate(ofGetWidth()/2, ofGetHeight()/2); // centre in right portion of screen
+            ofTranslate(sWidth/2, sHeight/2); // centre in right portion of screen
             ofRotateZDeg( ofMap(i, 0, videoTexture.getWidth()/speed, 0, 360));
             videoTexture.drawSubsection(0, 0, speed +2, videoTexture.getHeight(), i, 0);
             ofPopMatrix();
@@ -264,7 +256,7 @@ void ofApp::draw(){
         ofPushMatrix();
         ofRotateXDeg( 180);
         // ofRotateYDeg(180);
-        //ofTranslate(ofGetWidth(), ofGetHeight());
+        //ofTranslate(sWidth, sHeight);
         for (int i = 0; i < camWidth; i+= 10){
             for (int j = 0; j < camHeight; j+= 10){
                 lightness = pixelsRef.getColor(i,j).getLightness();
@@ -281,23 +273,23 @@ void ofApp::draw(){
         if (minuteThumbs.size()>0){
             // draw minute thumbs
             for (int i =0; i < minuteThumbs.size(); i++){
-                int x = 10 + ( (minuteWidth + thumbnailGutter) * (i % 12) );
-                int y = 10 + ( ( hourHeight + thumbnailGutter) * 2) + ( ( i / 12) * (minuteHeight + thumbnailGutter) );
+                int x = thumbsMargin + ( (minuteWidth + thumbnailGutter) * (i % minuteThumbLineLength) );
+                int y = thumbsMargin + ( ( hourHeight + thumbnailGutter) * 2) + ( ( i / minuteThumbLineLength) * (minuteHeight + thumbnailGutter) );
                 minuteThumbs[i].draw(x ,y);
-                cout << "drawing minute thumb: " << i << "at pos: " << x << ":" << y << endl;
+              //  cout << "drawing minute thumb: " << i << "at pos: " << x << ":" << y << endl;
             }
         }
         if (hourThumbs.size()>0){
             // draw hour thumbs
             for (int i =0; i < hourThumbs.size(); i++){
-                int x = 10 + ( (hourWidth + thumbnailGutter) * (i % 12) );
-                int y = 10 + ( ( i / 12) * (hourHeight + thumbnailGutter) );
+                int x = thumbsMargin + ( (hourWidth + thumbnailGutter) * (i % hourThumbLineLength) );
+                int y = thumbsMargin + ( ( i / hourThumbLineLength) * (hourHeight + thumbnailGutter) );
                 hourThumbs[i].draw(x ,y);
-                cout << "drawing hour thumb: " << i << "at pos: " << x << ":" << y << endl;
+               // cout << "drawing hour thumb: " << i << "at pos: " << x << ":" << y << endl;
             }
         }
         // draw the seconds slitscan video texture we have constructed
-        videoTexture.draw( 0, 0, camWidth, camHeight);
+        videoTexture.draw( 0, 0, sWidth, sHeight);
     }
 }
 

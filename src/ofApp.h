@@ -26,12 +26,13 @@ public:
     ofPixels videoPixels;
     ofTexture videoTexture;
     
-    int camWidth, camHeight, xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
+    int xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
     string scanName;
     bool b_radial, b_drawCam, b_drawDots, b_smooth;
-    float currTime;
+    float currTime, camWidth, camHeight;
     ofEasyCam cam;
     ofTrueTypeFont font;
     vector<ofTexture> minuteThumbs, hourThumbs;
-    int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter ;
+    int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter, thumbsMargin, hourThumbLineLength, minuteThumbLineLength;
+    int sWidth, sHeight;
 };
