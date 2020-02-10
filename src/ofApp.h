@@ -1,3 +1,12 @@
+/*
+ Project Title: SlitScan Clock
+ Description:
+ ©Daniel Buzzo 2020
+ dan@buzzo.com
+ http://buzzo.com
+ https://github.com/danbz
+ */
+
 #pragma once
 
 #include "ofMain.h"
@@ -14,7 +23,7 @@ public:
     
     // initiate a videograbber object and objects to put image pixel data into
     ofVideoGrabber vidGrabber;
-    ofPixels videoInverted;
+    ofPixels videoPixels;
     ofTexture videoTexture;
     
     int camWidth, camHeight, xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
@@ -23,4 +32,6 @@ public:
     float currTime;
     ofEasyCam cam;
     ofTrueTypeFont font;
+    vector<ofTexture> minuteThumbs, hourThumbs;
+    int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter ;
 };

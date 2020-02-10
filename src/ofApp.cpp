@@ -1,3 +1,11 @@
+/*
+ Project Title: SlitScan Clock
+ Description:
+ ©Daniel Buzzo 2020
+ dan@buzzo.com
+ http://buzzo.com
+ https://github.com/danbz
+ */
 #include "ofApp.h"
 
 //--------------------------------------------------------------
@@ -6,16 +14,33 @@ void ofApp::setup(){
     //    camHeight = 480;
     camWidth =  1280;  // try to grab at this size from the camera.
     camHeight = 720;
-    ySteps = 0;
+    
+    //**********************************************
+    // TO DO - set up with correct system time on startup
+    //**********************************************
+    
+    seconds = minutes = hours = 0; // set start time
+    numOfSecs = 10; // debug to allow running everything faster
+    numOfMins = 24;
+    numOfHours = 24;
+    
+    
+    
+    //**********************************************
+    // TO DO - set up screen width & height and auto adjust the scan amount for HH, MM & SS
+    //**********************************************
+    // calculate size of hour and minute thumbnails
+    thumbnailGutter = 10;
+    minuteWidth = hourWidth = (ofGetWidth() - (13 * thumbnailGutter)) /12.0;
+    minuteHeight = hourHeight = hourWidth *0.75;
+    xSteps = ySteps = 0;
     speed = 1;
-    scanStyle = 1;
+    scanStyle = 5; // start as clock style
     scanName = "horizontal";
     b_radial = b_drawDots = b_smooth = false;
-    b_drawCam = true;
-    seconds = minutes = hours = 0;
-    numOfSecs = 60;
-    numOfMins = 15;
-    numOfHours = 4;
+    b_drawCam = false;
+    
+    
     
     font.load("AkzidGroBol", 100);
     // font.load("LiberationMono-Regular.ttf", 50);
@@ -40,8 +65,8 @@ void ofApp::setup(){
     // set the width and height of the camera
     vidGrabber.initGrabber(camWidth, camHeight);
     // set up our pixel object to be the same size as our camera object
-    videoInverted.allocate(camWidth,camHeight, OF_PIXELS_RGB);
-    videoTexture.allocate(videoInverted);
+    videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB);
+    videoTexture.allocate(videoPixels);
     ofSetVerticalSync(true);
     
     ofSetBackgroundColor(0, 0, 0); // set the background colour to dark black
@@ -53,95 +78,104 @@ void ofApp::setup(){
 void ofApp::update(){
     
     vidGrabber.update();
-    ofPixels & pixels = vidGrabber.getPixels();
+    ofPixels pixels = vidGrabber.getPixels();
     
     switch (scanStyle) {
-        case 1: // scan horizontal
-            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
-                videoInverted.setColor(xSteps, y, color);
-            }
-            videoTexture.loadData(videoInverted);
+//        case 1: // scan horizontal
+//            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
+//                ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
+//                videoPixels.setColor(xSteps, y, color);
+//            }
+//            videoTexture.loadData(videoPixels);
+//
+//            if ( xSteps >= camWidth ) {
+//                xSteps = 0; // if we are on the bottom line of the image then start at the top again
+//            }
+//            xSteps += speed; // step on to the next line. increase this number to make things faster
+//            break;
+//
+//        case 2: // scan vertical
+//            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line
+//                ofColor color = pixels.getColor(x, ySteps); // get the pixels on line ySteps
+//                videoPixels.setColor(x, ySteps, color);
+//            }
+//            videoTexture.loadData(videoPixels);
+//
+//            if ( ySteps >= camHeight ) {
+//                ySteps = 0; // if we are on the bottom line of the image then start at the top again
+//            }
+//            ySteps += speed; // step on to the next line. increase this number to make things faster
+//            break;
+//
+//        case 3: // scan horizontal from centre
+//            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line to draw new line at 0 in target image
+//                ofColor color = pixels.getColor( camWidth/2, y); // get the pixels on line ySteps
+//                videoPixels.setColor(1, y, color);
+//            }
+//
+//            for (int x = camWidth; x>=0; x-= 1){
+//                for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
+//                    videoPixels.setColor(x, y, videoPixels.getColor( x-1, y )); // copy each pixel in the target to 1 pixel the right
+//                }
+//            }
+//            videoTexture.loadData(videoPixels);
+//            break;
+//
+//        case 4: // scan vertical from centre
+//            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line to draw new column at 0 in target image
+//                ofColor color = pixels.getColor(x, camHeight/2); // get the pixels on line ySteps
+//                videoPixels.setColor(x, 1, color);
+//            }
+//
+//            for (int y = camHeight; y>=0; y-= 1){
+//                for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a column
+//                    videoPixels.setColor(x, y, videoPixels.getColor( x, y-1 )); // copy each pixel in the target to 1 pixel below
+//                }
+//            }
+//            videoTexture.loadData(videoPixels);
+//            break;
             
-            if ( xSteps >= camWidth ) {
-                xSteps = 0; // if we are on the bottom line of the image then start at the top again
-            }
-            xSteps += speed; // step on to the next line. increase this number to make things faster
-            break;
-            
-        case 2: // scan vertical
-            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line
-                ofColor color = pixels.getColor(x, ySteps); // get the pixels on line ySteps
-                videoInverted.setColor(x, ySteps, color);
-            }
-            videoTexture.loadData(videoInverted);
-            
-            if ( ySteps >= camHeight ) {
-                ySteps = 0; // if we are on the bottom line of the image then start at the top again
-            }
-            ySteps += speed; // step on to the next line. increase this number to make things faster
-            break;
-            
-        case 3: // scan horizontal from centre
-            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line to draw new line at 0 in target image
-                ofColor color = pixels.getColor( camWidth/2, y); // get the pixels on line ySteps
-                videoInverted.setColor(1, y, color);
-            }
-            
-            for (int x = camWidth; x>=0; x-= 1){
-                for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                    videoInverted.setColor(x, y, videoInverted.getColor( x-1, y )); // copy each pixel in the target to 1 pixel the right
-                }
-            }
-            videoTexture.loadData(videoInverted);
-            break;
-            
-        case 4: // scan vertical from centre
-            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line to draw new column at 0 in target image
-                ofColor color = pixels.getColor(x, camHeight/2); // get the pixels on line ySteps
-                videoInverted.setColor(x, 1, color);
-            }
-            
-            for (int y = camHeight; y>=0; y-= 1){
-                for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a column
-                    videoInverted.setColor(x, y, videoInverted.getColor( x, y-1 )); // copy each pixel in the target to 1 pixel below
-                }
-            }
-            videoTexture.loadData(videoInverted);
-            break;
         case 5: // slitscan clock
             if (ofGetSystemTimeMillis() > currTime + 1000){ // one second has elapsed
-                if (seconds >= numOfSecs){
-                    // grab a minute chunk from the camera
-                    // pixels.drawSubsection(0, xSteps, xSteps + numOfSecs, videoTexture.getHeight(), xSteps, 0);
-                    for (int i = 0; i <numOfSecs; i++){
-                        for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                            ofColor color = pixels.getColor( xSteps - i , y); // get the pixels on line ySteps
-                            videoInverted.setColor(xSteps -i , y, color);
-                        }
-                        // xSteps ++;
-                    }
+                
+                if (seconds >= numOfSecs){ // grab a minute chunk from the camera
+                    // make a minute thumbnail and push into vector of minute thumbs
+                    ofPixels newPixels;
+                   // newPixels = pixels;
+                    newPixels = videoPixels; // load last minute's slitscan
+
+                    newPixels.resize(minuteWidth, minuteHeight);
+                    ofTexture newThumb;
+                    newThumb.allocate(newPixels);
+                    newThumb.loadData(newPixels);
+                    minuteThumbs.push_back(newThumb);
                     seconds = 0;
                     minutes ++;
-                    
                 }
-                if (minutes >= numOfMins){
-                    // grab a hour chunk from the camera
-                    // pixels.drawSubsection(0, xSteps, xSteps + numOfSecs, videoTexture.getHeight(), xSteps, 0);
+                
+                if (minutes >= numOfMins){ // grab a hour chunk from the camera
+                    ofPixels newPixels;
+                    newPixels = pixels;
+                    newPixels.resize(hourWidth, hourHeight);
+                    ofTexture newThumb;
+                    newThumb.allocate(newPixels);
+                    newThumb.loadData(newPixels);
+                    hourThumbs.push_back(newThumb);
+                
                     for (int i = 0; i <numOfMins * numOfSecs; i++){
                         for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
                             ofColor color = pixels.getColor( xSteps - i, y); // get the pixels on line ySteps
-                            videoInverted.setColor(xSteps - i, y, color);
+                            videoPixels.setColor(xSteps - i, y, color);
                         }
                         // xSteps ++;
                     }
                     seconds = 0;
                     minutes = 0 ;
                     hours ++;
-                    
+                    minuteThumbs.clear(); // empty the vector of minute thumbnails
                 }
-                if (hours >= numOfHours){
-                    //                    // grab a day chunk from the camera
+                
+                if (hours >= numOfHours){ // grab a day chunk from the camera
                     //                    // pixels.drawSubsection(0, xSteps, xSteps + numOfSecs, videoTexture.getHeight(), xSteps, 0);
                     //                    for (int i = 0; i <numOfMins * numOfSecs; i++){
                     //                        for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
@@ -153,20 +187,22 @@ void ofApp::update(){
                     hours = 0;
                     seconds = 0;
                     minutes = 0 ;
-                    
-                }
-                // count seconds
-                for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                    ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
-                    videoInverted.setColor(xSteps, y, color);
                 }
                 
-                videoTexture.loadData(videoInverted);
-                // every second step a line, every 60 seconds step a chunk, every 60 minutes step a block
+                // count seconds
+                for (int j=0; j < ofGetWidth()/numOfSecs; j++){
+                    for (int y=0; y < camHeight; y++ ) { // loop through all the pixels on a line
+                        ofColor color = pixels.getColor( j + (ofGetWidth()/numOfSecs * seconds), y); // get the pixels on line ySteps
+                        videoPixels.setColor(j + (ofGetWidth()/numOfSecs * seconds), y, color);
+                    }
+                    xSteps ++; // step on to the next line. increase this number to make things faster
+                }
+                videoTexture.loadData(videoPixels);
+                // every second step a lineChunk, every 60 seconds step a chunk, every 60 minutes step a block
+                
                 if ( xSteps >= camWidth ) {
                     xSteps = 0; // if we are on the end line of the image then start at the top again
                 }
-                xSteps ++; // step on to the next line. increase this number to make things faster
                 currTime = ofGetSystemTimeMillis();
                 seconds ++;
             }
@@ -206,7 +242,7 @@ void ofApp::draw(){
             clockSecs = ofToString(seconds);
         }
         time = clockHours + ":" + clockMins + ":" + clockSecs;
-        font.drawString( time  , ofGetWidth() -550, 110);
+        font.drawString( time  , ofGetWidth() -550, ofGetHeight() -90);
     }
     
     if (b_radial){ // radial ribbon
@@ -242,7 +278,26 @@ void ofApp::draw(){
         cam.end();
         
     } else {
-        videoTexture.draw( 0, 0, camWidth, camHeight); // draw the video texture we have constructed
+        if (minuteThumbs.size()>0){
+            // draw minute thumbs
+            for (int i =0; i < minuteThumbs.size(); i++){
+                int x = 10 + ( (minuteWidth + thumbnailGutter) * (i % 12) );
+                int y = 10 + ( ( hourHeight + thumbnailGutter) * 2) + ( ( i / 12) * (minuteHeight + thumbnailGutter) );
+                minuteThumbs[i].draw(x ,y);
+                cout << "drawing minute thumb: " << i << "at pos: " << x << ":" << y << endl;
+            }
+        }
+        if (hourThumbs.size()>0){
+            // draw hour thumbs
+            for (int i =0; i < hourThumbs.size(); i++){
+                int x = 10 + ( (hourWidth + thumbnailGutter) * (i % 12) );
+                int y = 10 + ( ( i / 12) * (hourHeight + thumbnailGutter) );
+                hourThumbs[i].draw(x ,y);
+                cout << "drawing hour thumb: " << i << "at pos: " << x << ":" << y << endl;
+            }
+        }
+        // draw the seconds slitscan video texture we have constructed
+        videoTexture.draw( 0, 0, camWidth, camHeight);
     }
 }
 
