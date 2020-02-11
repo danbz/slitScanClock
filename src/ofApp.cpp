@@ -12,8 +12,11 @@
 void ofApp::setup(){
     //    camWidth =  640;  // try to grab at this size from the camera.
     //    camHeight = 480;
-    camWidth =  1280;  // try to grab at this size from the camera.
-    camHeight = 720;
+        camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
+        camHeight = 720;
+//    camWidth =  1280;  // try to grab at this size from a standard external 4x3 webcam camera.
+//    camHeight = 1024;
+    
     float aspectRatio = camHeight / camWidth;
     //**********************************************
     // TO DO - set up with correct system time on startup
@@ -26,9 +29,6 @@ void ofApp::setup(){
     numOfMins = 60;
     numOfHours = 24;
     
-    //**********************************************
-    // TO DO - set up screen width & height and auto adjust the scan amount for HH, MM & SS
-    //**********************************************
     // calculate size of hour and minute thumbnails
     thumbnailGutter = 2;
     thumbsMargin = 6;
@@ -44,104 +44,104 @@ void ofApp::setup(){
     scanName = "horizontal";
     b_radial = b_drawDots = b_smooth = false;
     b_drawCam = false;
-    
-    font.load("AkzidGroBol.ttf", 100);
+    b_remote = false;
+    // load font as shapes to blend over video layer
+    font.load("AkzidGroBol.ttf", 100, true, true, true);
     // font.load("LiberationMono-Regular.ttf", 50);
     
-    // ask the video grabber for a list of attached camera devices.
-    // put it into a vector of devices
+    // ask the video grabber for a list of attached camera devices. & put it into a vector of devices
     vector<ofVideoDevice> devices = vidGrabber.listDevices();
-    
-    // loop through and print out the devices to the console log
-    for(int i = 0; i < devices.size(); i++){
+    for(int i = 0; i < devices.size(); i++){ // loop through and print out the devices to the console log
         if(devices[i].bAvailable){
             ofLogNotice() << devices[i].id << ": " << devices[i].deviceName;
         }else{
             ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
         }
     }
-    
-    // set the ID of the camera we will use
-    vidGrabber.setDeviceID(0);
-    // set how fast we will grab frames from the camera
-    vidGrabber.setDesiredFrameRate(30);
-    // set the width and height of the camera
-    vidGrabber.initGrabber(camWidth, camHeight);
-    // set up our pixel object to be the same size as our camera object
-    videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB);
+    vidGrabber.setDeviceID(0); // set the ID of the camera we will use
+    vidGrabber.setDesiredFrameRate(30); // set how fast we will grab frames from the camera
+    vidGrabber.initGrabber(camWidth, camHeight); // set the width and height of the camera
+    videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB); // set up our pixel object to be the same size as our camera object
     videoTexture.allocate(videoPixels);
     ofSetVerticalSync(true);
     
     ofSetBackgroundColor(0, 0, 0); // set the background colour to dark black
     ofEnableDepthTest();
     ofDisableSmoothing();
+    ofEnableAlphaBlending();
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    vidGrabber.update();
-    ofPixels pixels = vidGrabber.getPixels();
+//    vidGrabber.update();
+//    ofPixels pixels = vidGrabber.getPixels();
+    
+   // if (b_remote){
+        remoteImage.clear();
+        remoteImage.load("http://live1.brownrice.com/cam-images/westland.jpg");
+        ofPixels pixels = remoteImage.getPixels();
+   // }
     
     switch (scanStyle) {
-//        case 1: // scan horizontal
-//            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-//                ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
-//                videoPixels.setColor(xSteps, y, color);
-//            }
-//            videoTexture.loadData(videoPixels);
-//
-//            if ( xSteps >= camWidth ) {
-//                xSteps = 0; // if we are on the bottom line of the image then start at the top again
-//            }
-//            xSteps += speed; // step on to the next line. increase this number to make things faster
-//            break;
-//
-//        case 2: // scan vertical
-//            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line
-//                ofColor color = pixels.getColor(x, ySteps); // get the pixels on line ySteps
-//                videoPixels.setColor(x, ySteps, color);
-//            }
-//            videoTexture.loadData(videoPixels);
-//
-//            if ( ySteps >= camHeight ) {
-//                ySteps = 0; // if we are on the bottom line of the image then start at the top again
-//            }
-//            ySteps += speed; // step on to the next line. increase this number to make things faster
-//            break;
-//
-//        case 3: // scan horizontal from centre
-//            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line to draw new line at 0 in target image
-//                ofColor color = pixels.getColor( camWidth/2, y); // get the pixels on line ySteps
-//                videoPixels.setColor(1, y, color);
-//            }
-//
-//            for (int x = camWidth; x>=0; x-= 1){
-//                for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-//                    videoPixels.setColor(x, y, videoPixels.getColor( x-1, y )); // copy each pixel in the target to 1 pixel the right
-//                }
-//            }
-//            videoTexture.loadData(videoPixels);
-//            break;
-//
-//        case 4: // scan vertical from centre
-//            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line to draw new column at 0 in target image
-//                ofColor color = pixels.getColor(x, camHeight/2); // get the pixels on line ySteps
-//                videoPixels.setColor(x, 1, color);
-//            }
-//
-//            for (int y = camHeight; y>=0; y-= 1){
-//                for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a column
-//                    videoPixels.setColor(x, y, videoPixels.getColor( x, y-1 )); // copy each pixel in the target to 1 pixel below
-//                }
-//            }
-//            videoTexture.loadData(videoPixels);
-//            break;
+        case 1: // scan horizontal
+            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
+                ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
+                videoPixels.setColor(xSteps, y, color);
+            }
+            videoTexture.loadData(videoPixels);
+            
+            if ( xSteps >= camWidth ) {
+                xSteps = 0; // if we are on the bottom line of the image then start at the top again
+            }
+            xSteps += speed; // step on to the next line. increase this number to make things faster
+            break;
+            
+        case 2: // scan vertical
+            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line
+                ofColor color = pixels.getColor(x, ySteps); // get the pixels on line ySteps
+                videoPixels.setColor(x, ySteps, color);
+            }
+            videoTexture.loadData(videoPixels);
+            
+            if ( ySteps >= camHeight ) {
+                ySteps = 0; // if we are on the bottom line of the image then start at the top again
+            }
+            ySteps += speed; // step on to the next line. increase this number to make things faster
+            break;
+            
+        case 3: // scan horizontal from centre
+            for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line to draw new line at 0 in target image
+                ofColor color = pixels.getColor( camWidth/2, y); // get the pixels on line ySteps
+                videoPixels.setColor(1, y, color);
+            }
+            
+            for (int x = camWidth; x>=0; x-= 1){
+                for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
+                    videoPixels.setColor(x, y, videoPixels.getColor( x-1, y )); // copy each pixel in the target to 1 pixel the right
+                }
+            }
+            videoTexture.loadData(videoPixels);
+            break;
+            
+        case 4: // scan vertical from centre
+            for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a line to draw new column at 0 in target image
+                ofColor color = pixels.getColor(x, camHeight/2); // get the pixels on line ySteps
+                videoPixels.setColor(x, 1, color);
+            }
+            
+            for (int y = camHeight; y>=0; y-= 1){
+                for (int x=0; x<camWidth; x++ ) { // loop through all the pixels on a column
+                    videoPixels.setColor(x, y, videoPixels.getColor( x, y-1 )); // copy each pixel in the target to 1 pixel below
+                }
+            }
+            videoTexture.loadData(videoPixels);
+            break;
             
         case 5: // slitscan clock
             if (ofGetSystemTimeMillis() > currTime + 1000){ // one second has elapsed
                 currTime = ofGetSystemTimeMillis();
-                               seconds ++;
+                seconds ++;
                 if (seconds >= numOfSecs){ // grab a minute chunk from the camera
                     // make a minute thumbnail and push into vector of minute thumbs
                     ofPixels newPixels;
@@ -164,7 +164,7 @@ void ofApp::update(){
                     newThumb.allocate(newPixels);
                     newThumb.loadData(newPixels);
                     hourThumbs.push_back(newThumb);
-
+                    
                     seconds = 0;
                     minutes = 0 ;
                     hours ++;
@@ -180,11 +180,6 @@ void ofApp::update(){
                 // count seconds
                 for (int j=0; j < camWidth/numOfSecs; j++){
                     for (int y=0; y < camHeight; y++ ) { // loop through all the pixels on a line
-                        
-                        // *************************
-                        // FIX THIS to track with actual camWidth pixels rather than screenwidth!
-                        // *************************
-                        
                         ofColor color = pixels.getColor( j + (camWidth/numOfSecs * seconds), y); // get the pixels on line ySteps
                         videoPixels.setColor(j + (camWidth/numOfSecs * seconds), y, color);
                     }
@@ -196,7 +191,6 @@ void ofApp::update(){
                 if ( xSteps >= camWidth ) {
                     xSteps = 0; // if we are on the end line of the image then start at the top again
                 }
-               
             }
             break;
             
@@ -234,7 +228,7 @@ void ofApp::draw(){
             clockSecs = ofToString(seconds);
         }
         time = clockHours + ":" + clockMins + ":" + clockSecs;
-        font.drawString( time  , sWidth -550, sHeight -90);
+        font.drawStringAsShapes( time  , sWidth -550, sHeight -90);
     }
     
     if (b_radial){ // radial ribbon
@@ -270,13 +264,14 @@ void ofApp::draw(){
         cam.end();
         
     } else {
+        
         if (minuteThumbs.size()>0){
             // draw minute thumbs
             for (int i =0; i < minuteThumbs.size(); i++){
                 int x = thumbsMargin + ( (minuteWidth + thumbnailGutter) * (i % minuteThumbLineLength) );
                 int y = thumbsMargin + ( ( hourHeight + thumbnailGutter) * 2) + ( ( i / minuteThumbLineLength) * (minuteHeight + thumbnailGutter) );
                 minuteThumbs[i].draw(x ,y);
-              //  cout << "drawing minute thumb: " << i << "at pos: " << x << ":" << y << endl;
+                //  cout << "drawing minute thumb: " << i << "at pos: " << x << ":" << y << endl;
             }
         }
         if (hourThumbs.size()>0){
@@ -285,7 +280,7 @@ void ofApp::draw(){
                 int x = thumbsMargin + ( (hourWidth + thumbnailGutter) * (i % hourThumbLineLength) );
                 int y = thumbsMargin + ( ( i / hourThumbLineLength) * (hourHeight + thumbnailGutter) );
                 hourThumbs[i].draw(x ,y);
-               // cout << "drawing hour thumb: " << i << "at pos: " << x << ":" << y << endl;
+                // cout << "drawing hour thumb: " << i << "at pos: " << x << ":" << y << endl;
             }
         }
         // draw the seconds slitscan video texture we have constructed
@@ -334,16 +329,6 @@ void ofApp::keyPressed(int key){
             b_drawCam =!b_drawCam;
             break;
             
-        case OF_KEY_UP:
-            speed ++;
-            break;
-            
-        case OF_KEY_DOWN:
-            if (speed>1){
-                speed --;
-            }
-            break;
-            
         case 'd':
             b_drawDots =!b_drawDots;
             b_radial = false;
@@ -356,6 +341,10 @@ void ofApp::keyPressed(int key){
                 ofDisableSmoothing();
             }
             b_smooth =!b_smooth;
+            break;
+        case 'b':
+            
+            b_remote =!b_remote;
             break;
             
         default:
