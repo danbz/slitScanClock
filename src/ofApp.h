@@ -28,7 +28,7 @@ public:
     
     int xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
     string scanName;
-    bool b_radial, b_drawCam, b_drawDots, b_smooth, b_remote;
+    bool b_radial, b_drawCam, b_smooth;
     float currTime, camWidth, camHeight;
     ofEasyCam cam;
     ofTrueTypeFont font;
