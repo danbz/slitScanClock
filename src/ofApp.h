@@ -36,4 +36,7 @@ public:
     int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter, thumbsMargin, hourThumbLineLength, minuteThumbLineLength;
     int sWidth, sHeight;
     ofImage remoteImage;
+    
+    void makeMinuteThumb();
+    void makeHourThumb();
 };

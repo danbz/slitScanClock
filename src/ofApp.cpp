@@ -18,19 +18,17 @@ void ofApp::setup(){
     //    camHeight = 1024;
     
     float aspectRatio = camHeight / camWidth;
-    //**********************************************
-    // TO DO - set up with correct system time on startup
-    //**********************************************
     
+        
     sWidth = ofGetWidth();
     sHeight = ofGetHeight();
-    seconds = minutes = hours = 0; // set start time
     numOfSecs = 60; // debug to allow running everything faster
     numOfMins = 60;
     numOfHours = 24;
     
     // calculate size of hour and minute thumbnails
-    thumbnailGutter = 2;
+    
+    thumbnailGutter = 4;
     thumbsMargin = 6;
     hourThumbLineLength = 12;
     minuteThumbLineLength = 15;
@@ -68,6 +66,25 @@ void ofApp::setup(){
     ofEnableDepthTest();
     ofDisableSmoothing();
     ofEnableAlphaBlending();
+    
+    vidGrabber.update();
+    
+    // set start time
+    seconds = ofGetSeconds();
+    minutes = ofGetMinutes();
+    hours = ofGetHours();
+    //**********************************************
+    // TO DO - set up with correct amount of thumbs for hrs mins & seconds
+    //**********************************************
+
+    for (int i = 0; i <minutes; i++){
+        makeMinuteThumb();
+    }
+    
+    for (int i = 0; i <hours; i++){
+        makeHourThumb();
+    }
+
 }
 
 //--------------------------------------------------------------
@@ -82,50 +99,38 @@ void ofApp::update(){
         seconds ++;
         if (seconds >= numOfSecs){ // grab a minute chunk from the camera
             // make a minute thumbnail and push into vector of minute thumbs
-            ofPixels newPixels;
-            newPixels = videoPixels; // load last minute's slitscan
-            newPixels.resize(minuteWidth, minuteHeight);
-            ofTexture newThumb;
-            newThumb.allocate(newPixels);
-            newThumb.loadData(newPixels);
-            minuteThumbs.push_back(newThumb);
+            //            ofPixels newPixels;
+            //            newPixels = videoPixels; // load last minute's slitscan
+            //            newPixels.resize(minuteWidth, minuteHeight);
+            //            ofTexture newThumb;
+            //            newThumb.allocate(newPixels);
+            //            newThumb.loadData(newPixels);
+            //            minuteThumbs.push_back(newThumb);
+            makeMinuteThumb();
             seconds = 0;
             minutes ++;
         }
         
         if (minutes >= numOfMins){ // grab an hour chunk from the camera
-            ofPixels newPixels;
-            newPixels = pixels; // grab a full frame from camera
-            // alternatively blend all minute frames together to make hour composite.
-            newPixels.resize(hourWidth, hourHeight);
-            ofTexture newThumb;
-            newThumb.allocate(newPixels);
-            newThumb.loadData(newPixels);
-            hourThumbs.push_back(newThumb);
-            
-            seconds = 0;
-            minutes = 0 ;
+            //            ofPixels newPixels;
+            //            newPixels = pixels; // grab a full frame from camera
+            //            // alternatively blend all minute frames together to make hour composite.
+            //            newPixels.resize(hourWidth, hourHeight);
+            //            ofTexture newThumb;
+            //            newThumb.allocate(newPixels);
+            //            newThumb.loadData(newPixels);
+            //            hourThumbs.push_back(newThumb);
+            makeHourThumb();
+            seconds = minutes = 0 ;
             hours ++;
             minuteThumbs.clear(); // empty the vector of minute thumbnails
         }
         
         if (hours >= numOfHours){ // grab a day chunk from the camera
-            hours = 0;
-            seconds = 0;
-            minutes = 0 ;
+            hours = seconds = minutes = 0 ;
             hourThumbs.clear(); // empty the vector of hour thumbnails
         }
-        
-        // // count seconds
-        // for (int j=0; j < camWidth/numOfSecs; j++){
-        //   for (int y=0; y < camHeight; y++ ) { // loop through all the pixels on a line
-        //     ofColor color = pixels.getColor( j + (camWidth/numOfSecs * seconds), y); // get the pixels on line ySteps
-        //     videoPixels.setColor(j + (camWidth/numOfSecs * seconds), y, color);
-        //   }
-        // }
         xSteps =0; // step on to the next line. increase this number to make things faster
-        // videoTexture.loadData(videoPixels);
-        // every second step a lineChunk, every 60 seconds step a chunk, every 60 minutes step a block
     }
     
     switch (scanStyle) {
@@ -315,3 +320,27 @@ void ofApp::keyPressed(int key){
             break;
     }
 }
+
+
+void ofApp::makeMinuteThumb(){
+    ofPixels newPixels;
+    newPixels = videoPixels; // load last minute's slitscan
+    newPixels.resize(minuteWidth, minuteHeight);
+    ofTexture newThumb;
+    newThumb.allocate(newPixels);
+    newThumb.loadData(newPixels);
+    minuteThumbs.push_back(newThumb);
+}
+
+void ofApp::makeHourThumb(){
+    ofPixels newPixels;
+    //newPixels = pixels; // grab a full frame from camera
+    newPixels = videoPixels; // load last minute's slitscan
+    // alternatively blend all minute frames together to make hour composite.
+    newPixels.resize(hourWidth, hourHeight);
+    ofTexture newThumb;
+    newThumb.allocate(newPixels);
+    newThumb.loadData(newPixels);
+    hourThumbs.push_back(newThumb);
+}
+
