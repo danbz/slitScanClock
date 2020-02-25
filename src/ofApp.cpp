@@ -19,7 +19,6 @@ void ofApp::setup(){
     
     float aspectRatio = camHeight / camWidth;
     
-        
     sWidth = ofGetWidth();
     sHeight = ofGetHeight();
     numOfSecs = 60; // debug to allow running everything faster
@@ -27,7 +26,6 @@ void ofApp::setup(){
     numOfHours = 24;
     
     // calculate size of hour and minute thumbnails
-    
     thumbnailGutter = 4;
     thumbsMargin = 6;
     hourThumbLineLength = 12;
@@ -60,23 +58,18 @@ void ofApp::setup(){
     vidGrabber.initGrabber(camWidth, camHeight); // set the width and height of the camera
     videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB); // set up our pixel object to be the same size as our camera object
     videoTexture.allocate(videoPixels);
-    ofSetVerticalSync(true);
+   // ofSetVerticalSync(true);
     
     ofSetBackgroundColor(0, 0, 0); // set the background colour to dark black
-    ofEnableDepthTest();
     ofDisableSmoothing();
-    ofEnableAlphaBlending();
-    
     vidGrabber.update();
     
-    // set start time
+    // set start time from system time
     seconds = ofGetSeconds();
     minutes = ofGetMinutes();
     hours = ofGetHours();
-    //**********************************************
-    // TO DO - set up with correct amount of thumbs for hrs mins & seconds
-    //**********************************************
-
+    calculateTime();
+    // set up with correct amount of thumbs for hrs mins & seconds
     for (int i = 0; i <minutes; i++){
         makeMinuteThumb();
     }
@@ -84,7 +77,6 @@ void ofApp::setup(){
     for (int i = 0; i <hours; i++){
         makeHourThumb();
     }
-
 }
 
 //--------------------------------------------------------------
@@ -97,29 +89,15 @@ void ofApp::update(){
     if (ofGetSystemTimeMillis() > currTime + 1000){ // one second has elapsed
         currTime = ofGetSystemTimeMillis();
         seconds ++;
+        calculateTime();
+        
         if (seconds >= numOfSecs){ // grab a minute chunk from the camera
-            // make a minute thumbnail and push into vector of minute thumbs
-            //            ofPixels newPixels;
-            //            newPixels = videoPixels; // load last minute's slitscan
-            //            newPixels.resize(minuteWidth, minuteHeight);
-            //            ofTexture newThumb;
-            //            newThumb.allocate(newPixels);
-            //            newThumb.loadData(newPixels);
-            //            minuteThumbs.push_back(newThumb);
             makeMinuteThumb();
             seconds = 0;
             minutes ++;
         }
         
         if (minutes >= numOfMins){ // grab an hour chunk from the camera
-            //            ofPixels newPixels;
-            //            newPixels = pixels; // grab a full frame from camera
-            //            // alternatively blend all minute frames together to make hour composite.
-            //            newPixels.resize(hourWidth, hourHeight);
-            //            ofTexture newThumb;
-            //            newThumb.allocate(newPixels);
-            //            newThumb.loadData(newPixels);
-            //            hourThumbs.push_back(newThumb);
             makeHourThumb();
             seconds = minutes = 0 ;
             hours ++;
@@ -136,7 +114,7 @@ void ofApp::update(){
     switch (scanStyle) {
         case 1: // scan horizontal
             for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
-                ofColor color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
+                color = pixels.getColor( xSteps, y); // get the pixels on line ySteps
                 videoPixels.setColor(xSteps, y, color);
             }
             videoTexture.loadData(videoPixels);
@@ -211,49 +189,6 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
-    if (b_drawCam){ // draw camera debug to screen
-        vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
-        ofDrawBitmapString(" scanning " + scanName + " , press 1,2 or 3: for scantype, r: radial, c: camview, a: antialiased" , 10, sHeight -10);
-    }
-    
-    // generate text and draw clock time onscreen
-    string clockHours, clockMins, clockSecs, time;
-    if (hours < 10){
-        clockHours = "0" +ofToString(hours);
-    }  else {
-        clockHours = ofToString(hours);
-    }
-    
-    if (minutes < 10){
-        clockMins = "0" +ofToString(minutes);
-    }  else {
-        clockMins = ofToString(minutes);
-    }
-    
-    if (seconds < 10){
-        clockSecs = "0" +ofToString(seconds);
-    }  else {
-        clockSecs = ofToString(seconds);
-    }
-    time = clockHours + ":" + clockMins + ":" + clockSecs;
-    font.drawStringAsShapes( time  , sWidth -550, sHeight -90);
-    
-    if (minuteThumbs.size()>0){ // draw minute thumbs to screen
-        for (int i =0; i < minuteThumbs.size(); i++){
-            int x = thumbsMargin + ( (minuteWidth + thumbnailGutter) * (i % minuteThumbLineLength) );
-            int y = thumbsMargin + ( ( hourHeight + thumbnailGutter) * 2) + ( ( i / minuteThumbLineLength) * (minuteHeight + thumbnailGutter) );
-            minuteThumbs[i].draw(x ,y);
-        }
-    }
-    
-    if (hourThumbs.size()>0){ // draw hour thumbs to screen
-        for (int i =0; i < hourThumbs.size(); i++){
-            int x = thumbsMargin + ( (hourWidth + thumbnailGutter) * (i % hourThumbLineLength) );
-            int y = thumbsMargin + ( ( i / hourThumbLineLength) * (hourHeight + thumbnailGutter) );
-            hourThumbs[i].draw(x ,y);
-        }
-    }
-    
     if (b_radial){ // draw radial ribbon
         for (int i =0; i<videoTexture.getWidth(); i+=speed){
             ofPushMatrix();
@@ -264,6 +199,30 @@ void ofApp::draw(){
         }
     } else { // straight slices
         videoTexture.draw( 0, 0, sWidth, sHeight); // draw the seconds slitscan video texture we have constructed
+    }
+    
+    // draw thumbs
+    if (minuteThumbs.size()>0){ // draw minute thumbs to screen
+        for (int i =0; i < minuteThumbs.size(); i++){
+            int x = thumbsMargin + ( ( minuteWidth + thumbnailGutter ) * ( i % minuteThumbLineLength ) );
+            int y = thumbsMargin + ( ( hourHeight + thumbnailGutter ) * 2 ) + ( ( i / minuteThumbLineLength ) * ( minuteHeight + thumbnailGutter ) );
+            minuteThumbs[i].draw(x ,y);
+        }
+    }
+    
+    if (hourThumbs.size()>0){ // draw hour thumbs to screen
+        for (int i =0; i < hourThumbs.size(); i++){
+            int x = thumbsMargin + ( ( hourWidth + thumbnailGutter) * (i % hourThumbLineLength) );
+            int y = thumbsMargin + ( ( i / hourThumbLineLength) * (hourHeight + thumbnailGutter) );
+            hourThumbs[i].draw(x ,y);
+        }
+    }
+    
+    font.drawStringAsShapes( time, sWidth -550, sHeight -90);
+    
+    if (b_drawCam){ // draw camera debug to screen
+        vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
+        ofDrawBitmapString(" scanning " + scanName + " , press 1,2 or 3: for scantype, r: radial, c: camview, a: antialiased, FPS:" + ofToString(ofGetFrameRate()) , 10, sHeight -10);
     }
 }
 
@@ -321,7 +280,7 @@ void ofApp::keyPressed(int key){
     }
 }
 
-
+//--------------------------------------------------------------
 void ofApp::makeMinuteThumb(){
     ofPixels newPixels;
     newPixels = videoPixels; // load last minute's slitscan
@@ -332,6 +291,7 @@ void ofApp::makeMinuteThumb(){
     minuteThumbs.push_back(newThumb);
 }
 
+//--------------------------------------------------------------
 void ofApp::makeHourThumb(){
     ofPixels newPixels;
     //newPixels = pixels; // grab a full frame from camera
@@ -344,3 +304,26 @@ void ofApp::makeHourThumb(){
     hourThumbs.push_back(newThumb);
 }
 
+//--------------------------------------------------------------
+void ofApp::calculateTime(){
+    // generate text and draw clock time onscreen
+    string clockHours, clockMins, clockSecs;
+    if (hours < 10){
+        clockHours = "0" +ofToString(hours);
+    }  else {
+        clockHours = ofToString(hours);
+    }
+    
+    if (minutes < 10){
+        clockMins = "0" +ofToString(minutes);
+    }  else {
+        clockMins = ofToString(minutes);
+    }
+    
+    if (seconds < 10){
+        clockSecs = "0" +ofToString(seconds);
+    }  else {
+        clockSecs = ofToString(seconds);
+    }
+    time = clockHours + ":" + clockMins + ":" + clockSecs;
+}
