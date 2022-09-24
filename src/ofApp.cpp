@@ -8,14 +8,29 @@
  */
 #include "ofApp.h"
 
+/** ****************
+ To do
+ 
+ save each minute grab as image file
+ save each frame as 1fps movie
+ have alternative clock start time for 'local-time' 24 hr clock &
+ as elapsed time journey clock
+ 
+ ** set actual clock time
+ ** onto buses and in corridor
+ ******************/
+
 //--------------------------------------------------------------
 void ofApp::setup(){
-    //    camWidth =  640;  // try to grab at this size from the camera.
-    //    camHeight = 480;
-    camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
-    camHeight = 720;
+     camWidth =  640;  // try to grab at this size from the camera. for Raspberry Pi
+      camHeight = 480;
+   // camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
+    // camHeight = 720;
     //    camWidth =  1280;  // try to grab at this size from a standard external 4x3 webcam camera.
     //    camHeight = 1024;
+    //    camWidth= 1334; // stereo labs zed camera
+    //   // camWidth= 1280; // stereo labs zed camera
+    //    camHeight=376;
     
     float aspectRatio = camHeight / camWidth;
     
@@ -53,12 +68,12 @@ void ofApp::setup(){
             ofLogNotice() << devices[i].id << ": " << devices[i].deviceName << " - unavailable ";
         }
     }
-    vidGrabber.setDeviceID(1); // set the ID of the camera we will use
+    vidGrabber.setDeviceID(0); // set the ID of the camera we will use
     vidGrabber.setDesiredFrameRate(30); // set how fast we will grab frames from the camera
     vidGrabber.initGrabber(camWidth, camHeight); // set the width and height of the camera
     videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB); // set up our pixel object to be the same size as our camera object
     videoTexture.allocate(videoPixels);
-   // ofSetVerticalSync(true);
+    // ofSetVerticalSync(true);
     
     ofSetBackgroundColor(0, 0, 0); // set the background colour to dark black
     ofDisableSmoothing();
@@ -83,33 +98,48 @@ void ofApp::setup(){
 void ofApp::update(){
     
     vidGrabber.update();
-    ofPixels pixels = vidGrabber.getPixels();
+    pixels = vidGrabber.getPixels();
+    pixels.mirror(false, true);
     ofColor color;
     
-    if (ofGetSystemTimeMillis() > currTime + 1000){ // one second has elapsed
-        currTime = ofGetSystemTimeMillis();
-        seconds ++;
-        calculateTime();
+    ///////////////////// replace all this to call the system clock time instead     /////////////////////
+    if (ofGetSeconds() > seconds){ // one second has elapsed
+        seconds = ofGetSeconds();
         
-        if (seconds >= numOfSecs){ // grab a minute chunk from the camera
+        if (ofGetMinutes() >  minutes){ // grab a minute chunk from the camera
             makeMinuteThumb();
-            seconds = 0;
-            minutes ++;
+            minutes = ofGetMinutes();
+        } else {
+            if (ofGetMinutes() == 0){
+                minutes =0;
+            }
         }
         
-        if (minutes >= numOfMins){ // grab an hour chunk from the camera
+        if (ofGetHours() > hours){ // grab an hour chunk from the camera
             makeHourThumb();
             seconds = minutes = 0 ;
-            hours ++;
+            hours = ofGetHours();
             minuteThumbs.clear(); // empty the vector of minute thumbnails
+        } else {
+            if (ofGetHours() == 0){
+                hours = 0;
+            }
         }
         
-        if (hours >= numOfHours){ // grab a day chunk from the camera
+        if (numOfHours == 0){ // grab a day chunk from the camera
             hours = seconds = minutes = 0 ;
             hourThumbs.clear(); // empty the vector of hour thumbnails
         }
+        
         xSteps =0; // step on to the next line. increase this number to make things faster
+    } else {
+        if (ofGetSeconds() == 0){
+            seconds = 0;
+        }
     }
+    calculateTime();
+
+    ///////////////////// replace      /////////////////////
     
     switch (scanStyle) {
         case 1: // scan horizontal
@@ -150,6 +180,7 @@ void ofApp::update(){
                         videoPixels.setColor(x, y, videoPixels.getColor( x-1, y )); // copy each pixel in the target to 1 pixel the right
                     }
                 }
+                
             }
             videoTexture.loadData(videoPixels);
             xSteps++;

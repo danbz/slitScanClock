@@ -27,7 +27,7 @@ public:
     
     // initiate a videograbber object and objects to put image pixel data into
     ofVideoGrabber vidGrabber;
-    ofPixels videoPixels;
+    ofPixels videoPixels, pixels;
     ofTexture videoTexture;
     
     int xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
