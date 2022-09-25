@@ -253,7 +253,7 @@ void ofApp::draw(){
     
     if (b_drawCam){ // draw camera debug to screen
         vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
-        ofDrawBitmapString(" scanning " + scanName + " , press 1,2 or 3: for scantype, r: radial, c: camview, a: antialiased, FPS:" + ofToString(ofGetFrameRate()) , 10, sHeight -10);
+        ofDrawBitmapString(" scanning " + scanName + " , 1-scan horizontal 2-scan vertical 3-ribbon horizontal 4-ribbon vertical 5-slitscan clock, r-radial, c-camview, a-antialiased, FPS:" + ofToString(ofGetFrameRate()) , 10, sHeight -10);
     }
 }
 
