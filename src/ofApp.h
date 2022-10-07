@@ -33,7 +33,7 @@ public:
     int xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
     int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter, thumbsMargin, hourThumbLineLength, minuteThumbLineLength;
     int sWidth, sHeight;
-    bool b_radial, b_drawCam, b_smooth;
+    bool b_radial, b_drawCam, b_smooth, b_thumbs;
     float currTime, camWidth, camHeight;
     string scanName, time;
 
