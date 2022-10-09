@@ -255,84 +255,172 @@ void ofApp::draw(){
     }
     
     if (b_thumbs) { /// draw thumbs in a circle round the screen
-        if (hourThumbs.size()>0){ // draw hour thumbs to screen
-            int x, y;
-            for (int i =0; i < hourThumbs.size(); i++){
-              //  for (int i =0; i < 24; i++){
-                //           for (int i =0; i < 24; i++){
-                
-                if (i < 3){ // draw from 0- 3 along top
-                    x = sWidth/2 + i * (hourWidth + thumbnailGutter) - thumbnailGutter;
-                    y = thumbsMargin;
-                    
-                } else if (i < 9) { // draw down right side
-                    x = sWidth - thumbsMargin - hourWidth;
-                    y =  ((sHeight - thumbsMargin ) / hourThumbLineLength) * (i - 3) + hourHeight + thumbsMargin
-                    + (((sHeight - thumbsMargin ) / hourThumbLineLength) - hourHeight) ;
-                    
-                } else if (i < 15){ // draw along bottow
-                    x = sWidth - (thumbnailGutter + hourWidth) * (i - 9) - (hourWidth * 2) - thumbsMargin;
-                    y = sHeight - thumbsMargin - hourHeight;
-                    
-                } else if (i < 21){ //  draw up left side
-                    x = thumbsMargin;
-                    y = sHeight - ((sHeight - thumbsMargin ) / hourThumbLineLength) * (i - 15) - thumbsMargin - hourHeight * 2
-                    - (((sHeight - thumbsMargin ) / hourThumbLineLength) - hourHeight) ;;
-                    
-                } else if (i < 24){ // draw remaining thumbs along top
-                    x =  (thumbnailGutter + hourWidth) * (i - 21) + thumbsMargin + hourWidth;
-                    y =  thumbsMargin ;
-                }
-                hourThumbs[i].draw(x ,y);
-                // draw debug coloured thumbnail boxes
-                ofPushStyle();
-                ofSetColor(255,0,0);
-               // ofDrawRectangle(x, y, hourWidth, hourHeight);
-                ofSetColor(255);
-                ofDrawBitmapString(ofToString(i + 1), x + 5, y + 15 );
-                ofPopStyle();
-                // end draw debug boxes
-            }
-        }
+        //        if (hourThumbs.size()>0){ // draw hour thumbs to screen
+        //            int x, y;
+        //            for (int i =0; i < hourThumbs.size(); i++){
+        //              //  for (int i =0; i < 24; i++){
+        //                //           for (int i =0; i < 24; i++){
+        //
+        //                if (i < 3){ // draw from 0- 3 along top
+        //                    x = sWidth/2 + i * (hourWidth + thumbnailGutter) - thumbnailGutter;
+        //                    y = thumbsMargin;
+        //
+        //                } else if (i < 9) { // draw down right side
+        //                    x = sWidth - thumbsMargin - hourWidth;
+        //                    y =  ((sHeight - thumbsMargin ) / hourThumbLineLength) * (i - 3) + hourHeight + thumbsMargin
+        //                    + (((sHeight - thumbsMargin ) / hourThumbLineLength) - hourHeight) ;
+        //
+        //                } else if (i < 15){ // draw along bottow
+        //                    x = sWidth - (thumbnailGutter + hourWidth) * (i - 9) - (hourWidth * 2) - thumbsMargin;
+        //                    y = sHeight - thumbsMargin - hourHeight;
+        //
+        //                } else if (i < 21){ //  draw up left side
+        //                    x = thumbsMargin;
+        //                    y = sHeight - ((sHeight - thumbsMargin ) / hourThumbLineLength) * (i - 15) - thumbsMargin - hourHeight * 2
+        //                    - (((sHeight - thumbsMargin ) / hourThumbLineLength) - hourHeight) ;;
+        //
+        //                } else if (i < 24){ // draw remaining thumbs along top
+        //                    x =  (thumbnailGutter + hourWidth) * (i - 21) + thumbsMargin + hourWidth;
+        //                    y =  thumbsMargin ;
+        //                }
+        //                hourThumbs[i].draw(x ,y);
+        //                // draw debug coloured thumbnail boxes
+        //                ofPushStyle();
+        //                ofSetColor(255,0,0);
+        //               // ofDrawRectangle(x, y, hourWidth, hourHeight);
+        //                ofSetColor(255);
+        //                ofDrawBitmapString(ofToString(i + 1), x + 5, y + 15 );
+        //                ofPopStyle();
+        //                // end draw debug boxes
+        //            }
+        //        }
+        //
+        //        if (minuteThumbs.size()>0){ // draw hour thumbs to screen
+        //            int x, y;
+        //           // for (int i =0; i < 60; i++){
+        //            for (int i =0; i < minuteThumbs.size(); i++){
+        //                if (i < 7){ // draw  along top
+        //                    x = sWidth/2 + i * (minuteWidth + thumbnailGutter)  + minuteWidth/2 ;
+        //                    y = thumbsMargin + hourHeight;
+        //
+        //                } else if (i < 22) { // draw down right side
+        //                    x = sWidth - thumbsMargin - minuteWidth - hourWidth;
+        //                    y =  ((sHeight - thumbsMargin - hourHeight) / minuteThumbLineLength) * (i - 7) + hourHeight + thumbsMargin;
+        //
+        //                } else if (i < 37){ // draw along bottow
+        //                    x = ((sWidth - hourWidth*2) - (i-22) * (minuteWidth + thumbnailGutter)) + minuteWidth/2 + thumbnailGutter;
+        //                    y = sHeight - thumbsMargin - minuteHeight - hourHeight;
+        //
+        //                } else if (i < 52){ //  draw up left side
+        //                    x =  thumbsMargin + hourWidth;
+        //                    y = (sHeight - thumbsMargin - hourHeight) - ((sHeight - thumbsMargin - hourHeight) / minuteThumbLineLength) * (i - 37) - minuteHeight;
+        //
+        //                } else if (i < 60){ // draw remaining thumbs along top
+        //                    x =   (minuteWidth + thumbnailGutter) * (i - 52)  + hourWidth + minuteWidth + thumbsMargin + thumbnailGutter ;
+        //                    y =  thumbsMargin + hourHeight;
+        //                }
+        //                minuteThumbs[i].draw(x ,y);
+        //                // draw debug coloured thumbnail boxes
+        //                ofPushStyle();
+        //                ofSetColor(0,0,255);
+        //                //    ofDrawRectangle(x,  y, minuteWidth , minuteHeight);
+        //                ofSetColor(255);
+        //                ofDrawBitmapString(ofToString(i + 1),  x + 5, y + 15 );
+        //                ofPopStyle();
+        //                // end draw debug coloured thumbnail boxes
+        //
+        //            }  end of original thumb code
         
-        if (minuteThumbs.size()>0){ // draw hour thumbs to screen
-            int x, y;
-           // for (int i =0; i < 60; i++){
-            for (int i =0; i < minuteThumbs.size(); i++){
-                if (i < 7){ // draw  along top
-                    x = sWidth/2 + i * (minuteWidth + thumbnailGutter)  + minuteWidth/2 ;
-                    y = thumbsMargin + hourHeight;
-                    
-                } else if (i < 22) { // draw down right side
-                    x = sWidth - thumbsMargin - minuteWidth - hourWidth;
-                    y =  ((sHeight - thumbsMargin - hourHeight) / minuteThumbLineLength) * (i - 7) + hourHeight + thumbsMargin;
-                    
-                } else if (i < 37){ // draw along bottow
-                    x = ((sWidth - hourWidth*2) - (i-22) * (minuteWidth + thumbnailGutter)) + minuteWidth/2 + thumbnailGutter;
-                    y = sHeight - thumbsMargin - minuteHeight - hourHeight;
-                    
-                } else if (i < 52){ //  draw up left side
-                    x =  thumbsMargin + hourWidth;
-                    y = (sHeight - thumbsMargin - hourHeight) - ((sHeight - thumbsMargin - hourHeight) / minuteThumbLineLength) * (i - 37) - minuteHeight;
-                    
-                } else if (i < 60){ // draw remaining thumbs along top
-                    x =   (minuteWidth + thumbnailGutter) * (i - 52)  + hourWidth + minuteWidth + thumbsMargin + thumbnailGutter ;
-                    y =  thumbsMargin + hourHeight;
-                }
-                minuteThumbs[i].draw(x ,y);
-                // draw debug coloured thumbnail boxes
-                ofPushStyle();
-                ofSetColor(0,0,255);
-                //    ofDrawRectangle(x,  y, minuteWidth , minuteHeight);
-                ofSetColor(255);
-                ofDrawBitmapString(ofToString(i + 1),  x + 5, y + 15 );
-                ofPopStyle();
-                // end draw debug coloured thumbnail boxes
+        /// new thumb code ///
+        ///
+        int x, y;
+        int margin = 10 + hourHeight/2;
+        int top = margin;
+        int bottom = ofGetHeight() - margin;
+        int right = ofGetWidth() - margin;
+        int left = margin;
+        int numThumbsH = 6;
+        int numThumbsV = 6;
+        int thumbSpaceH = ofGetWidth() - margin * 2;
+        int thumbSpaceV = ofGetHeight() - margin * 2;
+        int thumbHSpacingH = thumbSpaceH/numThumbsH;
+        int thumbHSpacingV = thumbSpaceV/numThumbsV;
+        
+       // for (int i = 0; i < 24; i ++){
+        for (int i = 0; i < hourThumbs.size(); i ++){
 
+            if (i <4){ //set up hours on top right going right
+                x = i * thumbHSpacingH + ofGetWidth()/2;
+                y = top;
+                
+            } else if (i < 9){   //set up hours on right - going down
+                x = right;
+                y = ((i-3) * thumbHSpacingV) + margin;
+                
+            } else if ( i < 16){ //set up hours on bottom  - going left
+                x = ofGetWidth() -  (i-9) * thumbHSpacingH - margin;
+                y = bottom;
+                
+            } else if (i < 21){ //set up hours on left - going up
+                x = left;
+                y = ofGetHeight() - (i-15) * thumbHSpacingV - margin ;
+                
+            } else if (i <24){ //set up hours on top left - going right
+                x= (i-21) * thumbHSpacingH + margin;
+                y = top;
             }
+            hourThumbs[i].draw(x ,y);
+            ofPushStyle();
+            ofSetColor(100);
+           // ofDrawRectangle(x - 10, y - 10 , 20, 20);
+            ofSetColor(255);
+            ofDrawBitmapString(ofToString(i), x ,  y);
+            ofPopStyle();
+        }
+        // minute thumbs
+        int minMargin = margin + hourHeight;
+        int minTop = minMargin;
+        int minBottom = ofGetHeight() - minMargin;
+        int minRight = ofGetWidth() - minMargin;
+        int minLeft = minMargin;
+        int minNumThumbsH = 15;
+        int minNumThumbsV = 15;
+        int minThumbSpaceH = ofGetWidth() - minMargin * 2;
+        int minThumbSpaceV = ofGetHeight() - minMargin * 2;
+        int minThumbHSpacingH = minThumbSpaceH/minNumThumbsH;
+        int minThumbHSpacingV = minThumbSpaceV/minNumThumbsV;
+       // for (int i = 0; i < 60; i ++){
+        for (int i = 0; i < minuteThumbs.size(); i ++){
+            if (i <7){ //set up hours on top right going right
+                x = i * minThumbHSpacingH + ofGetWidth()/2 + minThumbHSpacingH/2;
+                y = minTop;
+                
+            } else if (i < 22){   //set up hours on right - going down
+                x = minRight;
+                y = ((i-7) * minThumbHSpacingV) + minMargin;
+                
+            } else if ( i < 37){ //set up hours on bottom  - going left
+                x = ofGetWidth() -  (i-22) * minThumbHSpacingH - minMargin;
+                y = minBottom;
+                
+            } else if (i < 52){ //set up hours on left - going up
+                x = minLeft;
+                y = ofGetHeight() - (i-37) * minThumbHSpacingV - minMargin ;
+                
+            } else if (i <60){ //set up hours on top left - going right
+                x = (i-52) * minThumbHSpacingH + minMargin;
+                y = minTop;
+            }
+            minuteThumbs[i].draw(x ,y);
+            ofPushStyle();
+            ofSetColor(150);
+          //  ofDrawRectangle(x - 10, y - 10 , 20, 20);
+            ofSetColor(255, 255, 0);
+            ofDrawBitmapString(ofToString(i), x ,  y);
+            ofPopStyle();
+            
         }
     }
-    
     
     // display the time using our truetype font
     //  font.drawStringAsShapes( time, sWidth -650, sHeight -90);
@@ -410,7 +498,7 @@ void ofApp::makeMinuteThumb(){
     ofTexture newThumb;
     newThumb.allocate(newPixels);
     newThumb.loadData(newPixels);
-    // newThumb.setAnchorPercent(0.5, 0.5);
+    newThumb.setAnchorPercent(0.5, 0.5); // make thumbnails draw from centre anchor point
     minuteThumbs.push_back(newThumb);
 }
 
@@ -424,7 +512,7 @@ void ofApp::makeHourThumb(){
     ofTexture newThumb;
     newThumb.allocate(newPixels);
     newThumb.loadData(newPixels);
-    // newThumb.setAnchorPercent(0.5, 0.5);
+    newThumb.setAnchorPercent(0.5, 0.5); // make thumbnails draw from centre anchor point
     hourThumbs.push_back(newThumb);
 }
 
