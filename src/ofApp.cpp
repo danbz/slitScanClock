@@ -1,7 +1,11 @@
 /*
  Project Title: SlitScan Clock
- Description:
- ©Daniel Buzzo 2020
+ Description: using oF video grabber to sample camera input then accessing pixels in each frame from the camera to create a
+ slitscan video.
+ each minute we grab the screen to create thumbnail images for the past hour and eacch hour we grab a thumbnail to show images for the last 24 hrs
+ 
+ 
+ ©Daniel Buzzo 2020, 21, 22
  dan@buzzo.com
  http://buzzo.com
  https://github.com/danbz
@@ -22,31 +26,35 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-     camWidth =  640;  // try to grab at this size from the camera. for Raspberry Pi
-      camHeight = 480;
-   // camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
-    // camHeight = 720;
+    
+    // set the width and height of the camera grabber to suit your particular camera
+    // common sizes are listed below
+    // camWidth =  640;  // try to grab at this size from the camera for Raspberry Pi
+    //  camHeight = 480;
+    camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
+    camHeight = 720;
     //    camWidth =  1280;  // try to grab at this size from a standard external 4x3 webcam camera.
     //    camHeight = 1024;
     //    camWidth= 1334; // stereo labs zed camera
-    //   // camWidth= 1280; // stereo labs zed camera
-    //    camHeight=376;
+    //    camWidth= 1280;
     
     float aspectRatio = camHeight / camWidth;
+    cout << aspectRatio << " aspect ratio" << endl;
     
     sWidth = ofGetWidth();
     sHeight = ofGetHeight();
-    numOfSecs = 60; // debug to allow running everything faster
-    numOfMins = 60;
-    numOfHours = 24;
+    numOfSecs = 59; // debug to allow running everything faster
+    numOfMins = 59;
+    numOfHours = 23;
     
     // calculate size of hour and minute thumbnails
-    thumbnailGutter = 4;
-    thumbsMargin = 6;
-    hourThumbLineLength = 12;
+    thumbnailGutter = 1;
+    thumbsMargin = 10;
+    hourThumbLineLength = 8;
     minuteThumbLineLength = 15;
-    hourWidth = (sWidth - (hourThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /hourThumbLineLength;
-    minuteWidth = (sWidth - (minuteThumbLineLength +1 * thumbnailGutter) - thumbsMargin * 2) /minuteThumbLineLength;
+    
+    hourWidth = (sWidth - (hourThumbLineLength) * thumbnailGutter - thumbsMargin * 2) / hourThumbLineLength;
+    minuteWidth = (sWidth - (minuteThumbLineLength) * thumbnailGutter - (thumbsMargin + hourWidth) * 2) / minuteThumbLineLength;
     hourHeight = hourWidth * aspectRatio;
     minuteHeight = minuteWidth * aspectRatio;
     xSteps = ySteps = 0;
@@ -55,9 +63,10 @@ void ofApp::setup(){
     scanName = "horizontal";
     b_radial = b_smooth = false;
     b_drawCam = false;
-    // load font as shapes to blend over video layer
-    font.load("AkzidGroBol.ttf", 100, true, true, true);
-    // font.load("LiberationMono-Regular.ttf", 50);
+    b_thumbs = true;
+    
+    // load a custom truetype font as outline shapes to blend over video layer
+    font.load("LiberationMono-Regular.ttf", 100, true, true, true);
     
     // ask the video grabber for a list of attached camera devices. & put it into a vector of devices
     vector<ofVideoDevice> devices = vidGrabber.listDevices();
@@ -74,7 +83,6 @@ void ofApp::setup(){
     videoPixels.allocate(camWidth,camHeight, OF_PIXELS_RGB); // set up our pixel object to be the same size as our camera object
     videoTexture.allocate(videoPixels);
     // ofSetVerticalSync(true);
-    
     ofSetBackgroundColor(0, 0, 0); // set the background colour to dark black
     ofDisableSmoothing();
     vidGrabber.update();
@@ -85,24 +93,28 @@ void ofApp::setup(){
     hours = ofGetHours();
     calculateTime();
     // set up with correct amount of thumbs for hrs mins & seconds
-    for (int i = 0; i <minutes; i++){
+    
+    videoPixels = vidGrabber.getPixels(); // preload current video frame into thumbarrays to get over cold start empty thumbnail arrays
+    update();
+    for (int i = 0; i < minutes; i++){
         makeMinuteThumb();
     }
     
-    for (int i = 0; i <hours; i++){
+    for (int i = 0; i < hours; i++){
         makeHourThumb();
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    
-    vidGrabber.update();
-    pixels = vidGrabber.getPixels();
-    pixels.mirror(false, true);
+    // update the video grabber object
     ofColor color;
     
-    ///////////////////// replace all this to call the system clock time instead     /////////////////////
+    vidGrabber.update();    //check to see if there is a new frame from the camera to process, and if there is - process it.
+    if (vidGrabber.isFrameNew()){
+        pixels = vidGrabber.getPixels();
+        pixels.mirror(false, true);
+    }
     if (ofGetSeconds() > seconds){ // one second has elapsed
         seconds = ofGetSeconds();
         
@@ -111,7 +123,7 @@ void ofApp::update(){
             minutes = ofGetMinutes();
         } else {
             if (ofGetMinutes() == 0){
-                minutes =0;
+                minutes = 0;
             }
         }
         
@@ -131,16 +143,19 @@ void ofApp::update(){
             hourThumbs.clear(); // empty the vector of hour thumbnails
         }
         
-        xSteps =0; // step on to the next line. increase this number to make things faster
+        calculateTime();
+        
+        if (scanStyle!=1) {
+            xSteps = 0;
+        }
+        // step on to the next line. increase this number to make things faster
     } else {
         if (ofGetSeconds() == 0){
             seconds = 0;
+            calculateTime();
         }
     }
-    calculateTime();
-
-    ///////////////////// replace      /////////////////////
-    
+        
     switch (scanStyle) {
         case 1: // scan horizontal
             for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
@@ -232,24 +247,98 @@ void ofApp::draw(){
         videoTexture.draw( 0, 0, sWidth, sHeight); // draw the seconds slitscan video texture we have constructed
     }
     
-    // draw thumbs
-    if (minuteThumbs.size()>0){ // draw minute thumbs to screen
-        for (int i =0; i < minuteThumbs.size(); i++){
-            int x = thumbsMargin + ( ( minuteWidth + thumbnailGutter ) * ( i % minuteThumbLineLength ) );
-            int y = thumbsMargin + ( ( hourHeight + thumbnailGutter ) * 2 ) + ( ( i / minuteThumbLineLength ) * ( minuteHeight + thumbnailGutter ) );
-            minuteThumbs[i].draw(x ,y);
-        }
-    }
-    
-    if (hourThumbs.size()>0){ // draw hour thumbs to screen
-        for (int i =0; i < hourThumbs.size(); i++){
-            int x = thumbsMargin + ( ( hourWidth + thumbnailGutter) * (i % hourThumbLineLength) );
-            int y = thumbsMargin + ( ( i / hourThumbLineLength) * (hourHeight + thumbnailGutter) );
+    if (b_thumbs) {
+        /// new thumb code ///
+        int x, y;
+        int margin = 5 +  hourWidth/2;
+        int top = margin -10;
+        int bottom = ofGetHeight() - margin ;
+        int right = ofGetWidth() - margin;
+        int left = margin;
+        int numThumbsH = 6;
+        int numThumbsV = 6;
+        int thumbSpaceH = ofGetWidth() - margin * 2;
+        int thumbSpaceV = ofGetHeight() - margin * 2;
+        int thumbHSpacingH = thumbSpaceH/numThumbsH;
+        int thumbHSpacingV = thumbSpaceV/numThumbsV;
+        
+        // for (int i = 0; i < 24; i ++){
+        for (int i = 0; i < hourThumbs.size(); i ++){
+            
+            if (i <4){ //set up hours on top right going right
+                x = i * thumbHSpacingH + ofGetWidth()/2;
+                y = top;
+                
+            } else if (i < 9){   //set up hours on right - going down
+                x = right;
+                y = ((i-3) * thumbHSpacingV) + margin;
+                
+            } else if ( i < 16){ //set up hours on bottom  - going left
+                x = ofGetWidth() -  (i-9) * thumbHSpacingH - margin;
+                y = bottom;
+                
+            } else if (i < 21){ //set up hours on left - going up
+                x = left;
+                y = ofGetHeight() - (i-15) * thumbHSpacingV - margin ;
+                
+            } else if (i <24){ //set up hours on top left - going right
+                x= (i-21) * thumbHSpacingH + margin;
+                y = top;
+            }
             hourThumbs[i].draw(x ,y);
+            ofPushStyle();
+            ofSetColor(100);
+            // ofDrawRectangle(x - 10, y - 10 , 20, 20);
+            ofSetColor(255);
+            ofDrawBitmapString(ofToString(i + 1), x ,  y);
+            ofPopStyle();
+        }
+        // minute thumbs
+        int minMargin = margin + hourWidth/2;
+        int minTop = minMargin;
+        int minBottom = ofGetHeight() - minMargin;
+        int minRight = ofGetWidth() - minMargin;
+        int minLeft = minMargin;
+        int minNumThumbsH = 15;
+        int minNumThumbsV = 15;
+        int minThumbSpaceH = ofGetWidth() - minMargin * 2;
+        int minThumbSpaceV = ofGetHeight() - minMargin * 2;
+        int minThumbHSpacingH = minThumbSpaceH/minNumThumbsH;
+        int minThumbHSpacingV = minThumbSpaceV/minNumThumbsV;
+        // for (int i = 0; i < 60; i ++){
+        for (int i = 0; i < minuteThumbs.size(); i ++){
+            if (i <7){ //set up hours on top right going right
+                x = i * minThumbHSpacingH + ofGetWidth()/2 + minThumbHSpacingH/2;
+                y = minTop;
+                
+            } else if (i < 22){   //set up hours on right - going down
+                x = minRight;
+                y = ((i-7) * minThumbHSpacingV) + minMargin;
+                
+            } else if ( i < 37){ //set up hours on bottom  - going left
+                x = ofGetWidth() -  (i-22) * minThumbHSpacingH - minMargin;
+                y = minBottom;
+                
+            } else if (i < 52){ //set up hours on left - going up
+                x = minLeft;
+                y = ofGetHeight() - (i-37) * minThumbHSpacingV - minMargin ;
+                
+            } else if (i <60){ //set up hours on top left - going right
+                x = (i-52) * minThumbHSpacingH + minMargin;
+                y = minTop;
+            }
+            minuteThumbs[i].draw(x ,y);
+            ofPushStyle();
+            ofSetColor(150);
+            //  ofDrawRectangle(x - 10, y - 10 , 20, 20);
+            ofSetColor(255, 255, 0);
+            ofDrawBitmapString(ofToString(i + 1), x ,  y);
+            ofPopStyle();
         }
     }
     
-    font.drawStringAsShapes( time, sWidth -550, sHeight -90);
+    // display the time using our truetype font
+    font.drawStringAsShapes( time, sWidth -650, sHeight -90);
     
     if (b_drawCam){ // draw camera debug to screen
         vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
@@ -297,6 +386,11 @@ void ofApp::keyPressed(int key){
             b_radial =!b_radial;
             break;
             
+        case 't':
+            b_thumbs =!b_thumbs;
+            break;
+            
+            
         case 'a':
             if (b_smooth){
                 ofEnableSmoothing();
@@ -314,24 +408,26 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::makeMinuteThumb(){
     ofPixels newPixels;
+    ofTexture newThumb;
     newPixels = videoPixels; // load last minute's slitscan
     newPixels.resize(minuteWidth, minuteHeight);
-    ofTexture newThumb;
     newThumb.allocate(newPixels);
     newThumb.loadData(newPixels);
+    newThumb.setAnchorPercent(0.5, 0.5); // make thumbnails draw from centre anchor point
     minuteThumbs.push_back(newThumb);
 }
 
 //--------------------------------------------------------------
 void ofApp::makeHourThumb(){
     ofPixels newPixels;
+    ofTexture newThumb;
     //newPixels = pixels; // grab a full frame from camera
     newPixels = videoPixels; // load last minute's slitscan
     // alternatively blend all minute frames together to make hour composite.
     newPixels.resize(hourWidth, hourHeight);
-    ofTexture newThumb;
     newThumb.allocate(newPixels);
     newThumb.loadData(newPixels);
+    newThumb.setAnchorPercent(0.5, 0.5); // make thumbnails draw from centre anchor point
     hourThumbs.push_back(newThumb);
 }
 

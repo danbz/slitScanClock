@@ -1,7 +1,7 @@
 # SlitScan clock
 https://github.com/danbz
 
-Dan Buzzo,  2020
+Dan Buzzo,  2020, 21, 22
 
 https://github.com/danbz
 
@@ -10,7 +10,7 @@ https://buzzo.com
 # SlitscanClock
 
 code in C++ using openFrameworks.cc for timeLapse 24hr slitscan clock
-
+// for example in oF core 
 #Controls
 
 * 1: scan horizontal
