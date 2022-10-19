@@ -18,9 +18,10 @@ code in C++ using openFrameworks.cc for timeLapse 24hr slitscan clock
 * 3: ribbon horizontal
 * 4: ribbon vertical
 * 5: slitscan clock 
-* c: hide preview
+* c: toggle debug and preview
 * f: toggle fullscreen
-* r: draw anystyle scan as radial
-* d: draw slitscan image as 3d dots z-ordered by lightness
+* r: toggle to draw anystyle scan as radial
+* t: toggle drawing hour and minute thumbnails
 
- ![screenshot](screenshot-slitScanClock.png)
+
+ ![screenshot](screenshot-slitScanClock2.png)
