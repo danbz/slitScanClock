@@ -12,17 +12,6 @@
  */
 #include "ofApp.h"
 
-/** ****************
- To do
- 
- save each minute grab as image file
- save each frame as 1fps movie
- have alternative clock start time for 'local-time' 24 hr clock &
- as elapsed time journey clock
- 
- ** set actual clock time
- ** onto buses and in corridor
- ******************/
 
 //--------------------------------------------------------------
 void ofApp::setup(){
@@ -39,7 +28,6 @@ void ofApp::setup(){
     //    camWidth= 1280;
     
     float aspectRatio = camHeight / camWidth;
-    cout << aspectRatio << " aspect ratio" << endl;
     
     sWidth = ofGetWidth();
     sHeight = ofGetHeight();
@@ -59,14 +47,17 @@ void ofApp::setup(){
     minuteHeight = minuteWidth * aspectRatio;
     xSteps = ySteps = 0;
     speed = 1;
-    scanStyle = 5; // start as clock style
-    scanName = "horizontal";
+    scanStyle = 3; // start as push horizontal clock style
+    scanName = "horizontal ribbon";
     b_radial = b_smooth = false;
     b_drawCam = false;
     b_thumbs = true;
     
     // load a custom truetype font as outline shapes to blend over video layer
-    font.load("LiberationMono-Regular.ttf", 100, true, true, true);
+   // font.load("LiberationMono-Regular.ttf", 100, true, true, true);
+    font.load("m48.TTF", 100, true, true, true);
+
+   
     
     // ask the video grabber for a list of attached camera devices. & put it into a vector of devices
     vector<ofVideoDevice> devices = vidGrabber.listDevices();
@@ -132,15 +123,10 @@ void ofApp::update(){
             seconds = minutes = 0 ;
             hours = ofGetHours();
             minuteThumbs.clear(); // empty the vector of minute thumbnails
-        } else {
-            if (ofGetHours() == 0){
-                hours = 0;
-            }
-        }
-        
-        if (numOfHours == 0){ // grab a day chunk from the camera
+        } else if (ofGetHours() == 0 && hourThumbs.size() > 0){ // grab a day chunk from the camera
             hours = seconds = minutes = 0 ;
             hourThumbs.clear(); // empty the vector of hour thumbnails
+            minuteThumbs.clear();
         }
         
         calculateTime();
