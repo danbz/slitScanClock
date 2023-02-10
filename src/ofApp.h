@@ -1,7 +1,7 @@
 /*
- Project Title: SlitScan Clock
+ Project Title: SlitScanVideoCam
  Description:
- ©Daniel Buzzo 2020
+ ©Daniel Buzzo 2022
  dan@buzzo.com
  http://buzzo.com
  https://github.com/danbz
@@ -18,25 +18,23 @@ public:
     void setup();
     void update();
     void draw();
-    
-    void keyPressed(int key); 
-    
-    void makeMinuteThumb();
-    void makeHourThumb();
-    void calculateTime();
+    void keyPressed(int key);
     
     // initiate a videograbber object and objects to put image pixel data into
     ofVideoGrabber vidGrabber;
     ofPixels videoPixels, pixels;
     ofTexture videoTexture;
     
-    int xSteps, ySteps, scanStyle, speed, seconds, minutes, hours, numOfSecs, numOfMins, numOfHours;
-    int hourWidth, minuteWidth, hourHeight, minuteHeight, thumbnailGutter, thumbsMargin, hourThumbLineLength, minuteThumbLineLength;
+    int xSteps, ySteps, scanStyle, speed, numFrames, maxFrames;
     int sWidth, sHeight;
-    bool b_radial, b_drawCam, b_smooth, b_thumbs;
+    bool b_radial, b_drawCam, b_smooth;
     float currTime, camWidth, camHeight;
     string scanName, time;
 
     ofTrueTypeFont font;
-    vector<ofTexture> minuteThumbs, hourThumbs;
+    vector< ofPixels > frames;
+   // vector< ofFbo > frames;
+
+    ofImage mask;
+    ofFbo maskFBO, layeredFBO;
 };
