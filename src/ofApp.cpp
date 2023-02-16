@@ -3,7 +3,7 @@
  Description: using oF video grabber to sample camera input then accessing pixels in each frame from the camera to create a
  slitscan video.
  each minute we grab the screen to create thumbnail images for the past hour and eacch hour we grab a thumbnail to show images for the last 24 hrs
-
+ 
  
  ©Daniel Buzzo 2020, 21, 22, 23
  dan@buzzo.com
@@ -17,10 +17,10 @@
 void ofApp::setup(){
     // set the width and height of the camera grabber to suit your particular camera
     // common sizes are listed below
-    //    camWidth =  640;  // try to grab at this size from the camera for Raspberry Pi
-    //    camHeight = 480;
-        camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
-        camHeight = 720;
+    camWidth =  640;  // try to grab at this size from the camera for Raspberry Pi
+    camHeight = 480;
+    //    camWidth =  1280;  // try to grab at this size from an apple HDwebcam camera.
+    //    camHeight = 720;
     //    camWidth =  1280;  // try to grab at this size from a standard external 4x3 webcam camera.
     //    camHeight = 1024;
     //    camWidth= 1334; // stereo labs zed camera
@@ -33,7 +33,7 @@ void ofApp::setup(){
     
     xSteps = ySteps = 0;
     maxFrames = 240;
-    numFrames = 120;
+    numFrames = 90;
     speed = 1;
     scanStyle = 5; // start as push videopush  style
     scanName = "horizontal ribbon";
@@ -64,51 +64,60 @@ void ofApp::setup(){
     ofEnableAlphaBlending();
     vidGrabber.update();
     ofEnableBlendMode(OF_BLENDMODE_ALPHA);
-
+    
     // set start time from system time
     
     for (int i = 0; i < maxFrames; i ++){
-       // if (vidGrabber.isFrameNew()){
+        // if (vidGrabber.isFrameNew()){
         
-            pixels = vidGrabber.getPixels();
-            pixels.mirror(false, true);
-//        ofFbo newFBO;
-//        videoTexture.loadData(pixels);
-//        newFBO.begin();
-//        videoTexture.draw(0,0);
-//        newFBO.end();
-//        frames.push_back(newFBO);
+        pixels = vidGrabber.getPixels();
+        pixels.mirror(false, true);
+        //        ofFbo newFBO;
+        //        videoTexture.loadData(pixels);
+        //        newFBO.begin();
+        //        videoTexture.draw(0,0);
+        //        newFBO.end();
+        //        frames.push_back(newFBO);
         frames.push_back(pixels);
-       // }
+        // }
     }
-   
+    
     maskFBO.allocate(camWidth, camHeight, GL_RGBA);
     layeredFBO.allocate(camWidth, camHeight, GL_RGBA);
     
     maskFBO.begin();
-        ofClear(0,0,0,0);
-        ofSetColor(255,255,255);
-        ofDrawCircle(camWidth/2 , camHeight/2, 200);
+    ofClear(0,0,0,0);
+    ofSetColor(255,255,255);
+    ofDrawCircle(camWidth/2 , camHeight/2, 200);
     maskFBO.end();
+    
+    // cascade finder begin
+    
+    finder.setup("haarcascade_frontalface_default.xml");
+    //finder.findHaarObjects(img);
 }
+
 
 //--------------------------------------------------------------
 void ofApp::update(){
     // update the video grabber object
     ofColor color;
-    int step;
+    int step, maskX, maskY;
     vidGrabber.update();    //check to see if there is a new frame from the camera to process, and if there is - process it.
     if (vidGrabber.isFrameNew()){
         pixels = vidGrabber.getPixels();
-      //  pixels.mirror(false, true);
+        // fire our new video image to the haar cascade face finder
+        finder.findHaarObjects(pixels);
+        //  pixels.mirror(false, true);
+        
         frames.erase(frames.begin());
-       frames.push_back(pixels);
-//        ofFbo newFBO;
-//        videoTexture.loadData(pixels);
-//        newFBO.begin();
-//        videoTexture.draw(0,0);
-//        newFBO.end();
-       // frames.push_back(newFBO);
+        frames.push_back(pixels);
+        //        ofFbo newFBO;
+        //        videoTexture.loadData(pixels);
+        //        newFBO.begin();
+        //        videoTexture.draw(0,0);
+        //        newFBO.end();
+        // frames.push_back(newFBO);
     }
     
     switch (scanStyle) {
@@ -170,7 +179,7 @@ void ofApp::update(){
             break;
             
         case 5: // video version scanStyle in blocks from the frames vector buffer
-           
+            
             for (int i =0; i < numFrames; i ++){
                 for (int x = xSteps; x < xSteps + camWidth/numFrames; x++){
                     for (int y=0; y<camHeight; y++ ) { // loop through all the pixels on a line
@@ -186,22 +195,31 @@ void ofApp::update(){
             xSteps = 0;
             break;
             
-        case 6:
-            step = camWidth/numFrames;
+        case 6: // make circular layered mask at position of faces and apply mask to buffered image vector.
+            // use xy coordinates from haar cascade classifier to centre mask
+            step = camWidth / numFrames;
             ofSetColor(255);
             for (int i =0; i < numFrames; i ++){
-               videoTexture.loadData(frames[maxFrames - numFrames + i]);
-                    maskFBO.begin();
-                        ofClear(0,0,0,0);
-                        ofDrawCircle(camWidth/2 , camHeight/2, camWidth -  i * (step ));
-                    maskFBO.end();
-                    videoTexture.setAlphaMask( maskFBO.getTexture() );
-                    layeredFBO.begin();
-                        videoTexture.draw(0,0);
-                    layeredFBO.end();
+                videoTexture.loadData(frames[maxFrames - numFrames + i]);
+                
+                maskFBO.begin();
+                ofClear(0,0,0,0);
+                for(unsigned int j = 0; j < finder.blobs.size(); j++) {
+                    ofRectangle cur = finder.blobs[j].boundingRect;
+                    maskX = cur.x + cur.width/2;
+                    maskY = cur.y + cur.height/2 ;
+                    ofDrawCircle(maskX , maskY, camWidth -  i * (step ) + (cur.width/3));
+                    // ofDrawCircle(maskX , maskY, cur.width +  i * step );
+                    
+                }
+                maskFBO.end();
+                videoTexture.setAlphaMask( maskFBO.getTexture() );
+                layeredFBO.begin();
+                videoTexture.draw(0,0);
+                layeredFBO.end();
             }
-           // videoTexture.loadData(videoPixels);
-       //     videoTexture.setAlphaMask( maskFBO.getTexture() );
+            // videoTexture.loadData(videoPixels);
+            //     videoTexture.setAlphaMask( maskFBO.getTexture() );
             break;
             
         default:
@@ -212,9 +230,9 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofHideCursor;
-//    ofTexture newTexture;
-//    newTexture.loadData( frames[0]);
-   // vidGrabber.draw(0, 0, sWidth, sHeight);
+    //    ofTexture newTexture;
+    //    newTexture.loadData( frames[0]);
+    // vidGrabber.draw(0, 0, sWidth, sHeight);
     if (b_radial){ // draw radial ribbon
         for (int i =0; i<videoTexture.getWidth(); i+=speed){
             ofPushMatrix();
@@ -225,14 +243,30 @@ void ofApp::draw(){
         }
     } else if (scanStyle == 6) { // straight slices
         layeredFBO.draw(0,0,sWidth, sHeight);
+        // layeredFBO.draw(0,0);
     } else {
         videoTexture.draw( 0, 0, sWidth, sHeight); // draw the seconds slitscan video texture we have constructed
+        // videoTexture.draw( 0, 0); // draw the seconds slitscan video texture we have constructed
+        
     }
     
     if (b_drawCam){ // draw camera debug to screen
         vidGrabber.draw(sWidth-camWidth/4 -10, sHeight-camHeight/4 -10, camWidth/4, camHeight/4); // draw our plain image
         ofDrawBitmapString(" scanning " + scanName + " , 1-scan horiz 2-scan vert 3-ribbon horiz 4-ribbon vert 5-live video, r-radial, c-camview, FPS:" + ofToString(ofGetFrameRate()) + "numFrames: " + ofToString(numFrames) , 10, sHeight -10);
+        
+        
+        
+        // cascade finder
+        ofPushStyle();
+        ofNoFill();
+        for(unsigned int i = 0; i < finder.blobs.size(); i++) {
+            ofRectangle cur = finder.blobs[i].boundingRect;
+            float screenScale =  ofGetWidth() / camWidth;
+            ofDrawRectangle(cur.x * screenScale, cur.y * screenScale, cur.width * screenScale, cur.height * screenScale);
+        }
+        ofPopStyle();
     }
+    
 }
 
 //--------------------------------------------------------------

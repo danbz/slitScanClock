@@ -2,6 +2,6 @@
 <Workspace
    version = "1.0">
    <FileRef
-      location = "self:/Users/danbuzzo/Developer/of_v0.11.2_osx_release/apps/myApps/slitScanVideoCam/slitScanVideoCam.xcodeproj">
+      location = "self:">
    </FileRef>
 </Workspace>

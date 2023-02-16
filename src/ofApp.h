@@ -1,7 +1,7 @@
 /*
  Project Title: SlitScanVideoCam
  Description:
- ©Daniel Buzzo 2022
+ ©Daniel Buzzo 2022, 2023
  dan@buzzo.com
  http://buzzo.com
  https://github.com/danbz
@@ -10,6 +10,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxCvHaarFinder.h"
 
 class ofApp : public ofBaseApp{
     
@@ -37,4 +38,8 @@ public:
 
     ofImage mask;
     ofFbo maskFBO, layeredFBO;
+    
+    
+    // haar cascade finder
+    ofxCvHaarFinder finder;
 };
