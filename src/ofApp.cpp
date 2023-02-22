@@ -15,6 +15,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    
+    
     // set the width and height of the camera grabber to suit your particular camera
     // common sizes are listed below
     camWidth =  640;  // try to grab at this size from the camera for Raspberry Pi
@@ -92,9 +94,13 @@ void ofApp::setup(){
     maskFBO.end();
     
     // cascade finder begin
+    //   finder.setup("haarcascade_frontalface_default.xml");
+    // face tracker setup
+    // set path for tracker data
+    //   ofSetDataPathRoot(ofFile(__BASE_FILE__).getEnclosingDirectory()+"../../model/");
+    tracker.setup();
+    // tracker.setLandmarkDetectorImageSize(ofGetWidth());
     
-    finder.setup("haarcascade_frontalface_default.xml");
-    //finder.findHaarObjects(img);
 }
 
 
@@ -107,7 +113,9 @@ void ofApp::update(){
     if (vidGrabber.isFrameNew()){
         pixels = vidGrabber.getPixels();
         // fire our new video image to the haar cascade face finder
-        finder.findHaarObjects(pixels);
+        //    finder.findHaarObjects(pixels);
+        // fire our ofx face tracker
+        tracker.update(vidGrabber);
         //  pixels.mirror(false, true);
         
         frames.erase(frames.begin());
@@ -204,12 +212,27 @@ void ofApp::update(){
                 
                 maskFBO.begin();
                 ofClear(0,0,0,0);
-                for(unsigned int j = 0; j < finder.blobs.size(); j++) {
-                    ofRectangle cur = finder.blobs[j].boundingRect;
-                    maskX = cur.x + cur.width/2;
-                    maskY = cur.y + cur.height/2 ;
-                    ofDrawCircle(maskX , maskY, camWidth -  i * (step ) + (cur.width/3));
-                    // ofDrawCircle(maskX , maskY, cur.width +  i * step );
+                // walk thru recognised faces via haar cascade classifier
+                //                for(unsigned int j = 0; j < finder.blobs.size(); j++) {
+                //                    ofRectangle cur = finder.blobs[j].boundingRect;
+                //                    maskX = cur.x + cur.width/2;
+                //                    maskY = cur.y + cur.height/2 ;
+                //                    ofDrawCircle(maskX , maskY, camWidth -  i * (step ) + (cur.width/3));
+                //                    // ofDrawCircle(maskX , maskY, cur.width +  i * step );
+                //
+                //                }
+                // walk thoough faces found via ofxfacetracker
+                if (tracker.size() >0){
+                    for(auto instance : tracker.getInstances() ) {
+                        auto rect = instance.getBoundingBox();
+                        maskX = rect.x + rect.width/2;
+                        maskY = rect.y + rect.height/2 ;
+                        // ofDrawRectangle(maskX, maskY, rect.width, rect.height);
+                        ofDrawCircle(maskX , maskY, camWidth -  i * (step ) + (rect.width/3));
+                        // ofDrawCircle(maskX , maskY, cur.width +  i * step );
+                    }
+                } else {
+                    ofDrawCircle(ofGetWidth()/2 , ofGetHeight()/2, camWidth -  i * step );
                     
                 }
                 maskFBO.end();
@@ -243,7 +266,7 @@ void ofApp::draw(){
         }
     } else if (scanStyle == 6) { // straight slices
         layeredFBO.draw(0,0,sWidth, sHeight);
-        // layeredFBO.draw(0,0);
+        //  layeredFBO.draw(0,0);
     } else {
         videoTexture.draw( 0, 0, sWidth, sHeight); // draw the seconds slitscan video texture we have constructed
         // videoTexture.draw( 0, 0); // draw the seconds slitscan video texture we have constructed
@@ -257,16 +280,34 @@ void ofApp::draw(){
         
         
         // cascade finder
-        ofPushStyle();
-        ofNoFill();
-        for(unsigned int i = 0; i < finder.blobs.size(); i++) {
-            ofRectangle cur = finder.blobs[i].boundingRect;
-            float screenScale =  ofGetWidth() / camWidth;
-            ofDrawRectangle(cur.x * screenScale, cur.y * screenScale, cur.width * screenScale, cur.height * screenScale);
-        }
-        ofPopStyle();
+        //        ofPushStyle();
+        //        ofNoFill();
+        //        for(unsigned int i = 0; i < finder.blobs.size(); i++) {
+        //            ofRectangle cur = finder.blobs[i].boundingRect;
+        //            float screenScale =  ofGetWidth() / camWidth;
+        //            ofDrawRectangle(cur.x * screenScale, cur.y * screenScale, cur.width * screenScale, cur.height * screenScale);
+        //        }
+        //        ofPopStyle();
+        
+        // Draw tracker landmarks
+        ofPushMatrix();
+        //ofScale( sHeight/camHeight);
+        tracker.drawDebug();
+        
+        // Draw estimated 3d pose
+        tracker.drawDebugPose();
+        ofPopMatrix();
+        ofDrawBitmapString( " num of Faces" + ofToString( tracker.size() ), 20, 40);
+        //        int maskX, maskY;
+        //        for(auto instance : tracker.getInstances() ) {
+        //            auto rect = instance.getBoundingBox();
+        ////            maskX = rect.x + rect.width/2;
+        ////            maskY = rect.y + rect.height/2 ;
+        //            ofDrawRectangle(rect);
+        //          //  ofDrawCircle(maskX , maskY, camWidth -  i * (step ) + (rect.width/3));
+        //            // ofDrawCircle(maskX , maskY, cur.width +  i * step );
+        //        }
     }
-    
 }
 
 //--------------------------------------------------------------

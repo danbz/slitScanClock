@@ -11,6 +11,7 @@
 
 #include "ofMain.h"
 #include "ofxCvHaarFinder.h"
+#include "ofxFaceTracker2.h"
 
 class ofApp : public ofBaseApp{
     
@@ -41,5 +42,8 @@ public:
     
     
     // haar cascade finder
-    ofxCvHaarFinder finder;
+   // ofxCvHaarFinder finder;
+    
+    // face tracker 2
+    ofxFaceTracker2 tracker;
 };
